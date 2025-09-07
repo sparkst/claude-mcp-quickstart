@@ -1,6 +1,6 @@
 {
   "name": "mcp-quickstart",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "One-command MCP setup for Claude Desktop with guided API key setup",
   "main": "index.js",
   "bin": {
