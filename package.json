@@ -1,6 +1,6 @@
 {
   "name": "mcp-quickstart",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Transform Claude Desktop into an AI powerhouse in 60 seconds - by Sparkry.AI",
   "main": "index.js",
   "bin": {
