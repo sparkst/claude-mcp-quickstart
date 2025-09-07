@@ -32,6 +32,9 @@ class MCPInstaller {
     // API keys storage
     this.apiKeys = {};
     
+    // Existing config
+    this.existingConfig = null;
+    
     // For readline interface
     this.rl = null;
   }
@@ -74,6 +77,45 @@ class MCPInstaller {
     });
   }
 
+  maskApiKey(key) {
+    if (!key || key.length < 8) return key;
+    return key.substring(0, 5) + '...' + key.substring(key.length - 3);
+  }
+
+  loadExistingConfig() {
+    if (fs.existsSync(this.claudeConfig)) {
+      try {
+        this.existingConfig = JSON.parse(fs.readFileSync(this.claudeConfig, 'utf8'));
+        return true;
+      } catch {
+        this.existingConfig = null;
+        return false;
+      }
+    }
+    return false;
+  }
+
+  getExistingApiKey(serviceName) {
+    if (!this.existingConfig || !this.existingConfig.mcpServers) {
+      return null;
+    }
+
+    const server = this.existingConfig.mcpServers[serviceName];
+    if (!server || !server.env) {
+      return null;
+    }
+
+    // Different services use different env var names
+    const keyMap = {
+      'brave-search': 'BRAVE_API_KEY',
+      'tavily-search': 'TAVILY_API_KEY',
+      'github': 'GITHUB_PERSONAL_ACCESS_TOKEN'
+    };
+
+    const envVar = keyMap[serviceName];
+    return server.env[envVar] || null;
+  }
+
   async setupWizard() {
     console.log(`
 ╔════════════════════════════════════════╗
@@ -85,13 +127,11 @@ Welcome! Let's set up your AI-powered Claude Desktop.
 This takes about 60 seconds.
 `);
 
-    // Check for existing config
-    if (fs.existsSync(this.claudeConfig)) {
-      const answer = await this.prompt('📝 Existing configuration found. Overwrite? (y/N): ');
-      if (answer.toLowerCase() !== 'y') {
-        console.log('Setup cancelled.');
-        process.exit(0);
-      }
+    // Load existing configuration
+    const hasExisting = this.loadExistingConfig();
+    
+    if (hasExisting) {
+      console.log('📝 Found existing configuration. We\'ll preserve your settings.\n');
     }
 
     console.log(`
@@ -108,11 +148,25 @@ This requires free API keys from search providers.
     console.log(`   Get free API key: https://api.search.brave.com/app/keys`);
     console.log(`   (2,000 free searches/month)\n`);
     
-    const braveKey = await this.prompt('Brave API Key (press Enter to skip): ');
+    const existingBrave = this.getExistingApiKey('brave-search');
+    let bravePrompt = 'Brave API Key (press Enter to skip): ';
+    
+    if (existingBrave && existingBrave !== 'REPLACE_WITH_BRAVE_KEY') {
+      bravePrompt = `Brave API Key [Current: ${this.maskApiKey(existingBrave)}] (Enter to keep, or paste new): `;
+    }
+    
+    const braveKey = await this.prompt(bravePrompt);
+    
     if (braveKey) {
+      // User entered a new key
       this.apiKeys.brave = braveKey;
       this.optionalServers.push('@modelcontextprotocol/server-brave-search');
-      this.log('Brave Search will be configured', 'success');
+      this.log('Brave Search will be updated', 'success');
+    } else if (existingBrave && existingBrave !== 'REPLACE_WITH_BRAVE_KEY') {
+      // User pressed enter, keep existing
+      this.apiKeys.brave = existingBrave;
+      this.optionalServers.push('@modelcontextprotocol/server-brave-search');
+      this.log('Keeping existing Brave Search configuration', 'info');
     } else {
       this.log('Skipping Brave Search', 'info');
     }
@@ -124,12 +178,25 @@ This requires free API keys from search providers.
     console.log(`   Get free API key: https://app.tavily.com/sign-up`);
     console.log(`   (1,000 free searches/month)\n`);
     
-    const tavilyKey = await this.prompt('Tavily API Key (press Enter to skip): ');
+    const existingTavily = this.getExistingApiKey('tavily-search');
+    let tavilyPrompt = 'Tavily API Key (press Enter to skip): ';
+    
+    if (existingTavily && existingTavily !== 'REPLACE_WITH_TAVILY_KEY') {
+      tavilyPrompt = `Tavily API Key [Current: ${this.maskApiKey(existingTavily)}] (Enter to keep, or paste new): `;
+    }
+    
+    const tavilyKey = await this.prompt(tavilyPrompt);
+    
     if (tavilyKey) {
+      // User entered a new key
       this.apiKeys.tavily = tavilyKey;
-      // Install official Tavily MCP server
       this.optionalServers.push('@modelcontextprotocol/server-tavily');
-      this.log('Tavily Search will be configured', 'success');
+      this.log('Tavily Search will be updated', 'success');
+    } else if (existingTavily && existingTavily !== 'REPLACE_WITH_TAVILY_KEY') {
+      // User pressed enter, keep existing
+      this.apiKeys.tavily = existingTavily;
+      this.optionalServers.push('@modelcontextprotocol/server-tavily');
+      this.log('Keeping existing Tavily Search configuration', 'info');
     } else {
       this.log('Skipping Tavily Search', 'info');
     }
@@ -146,11 +213,25 @@ Would you like Claude to manage your GitHub repos?
     console.log(`   Create token: https://github.com/settings/tokens/new`);
     console.log(`   Required scopes: repo, read:user\n`);
     
-    const githubToken = await this.prompt('GitHub Token (press Enter to skip): ');
+    const existingGithub = this.getExistingApiKey('github');
+    let githubPrompt = 'GitHub Token (press Enter to skip): ';
+    
+    if (existingGithub && existingGithub !== 'REPLACE_WITH_GITHUB_TOKEN') {
+      githubPrompt = `GitHub Token [Current: ${this.maskApiKey(existingGithub)}] (Enter to keep, or paste new): `;
+    }
+    
+    const githubToken = await this.prompt(githubPrompt);
+    
     if (githubToken) {
+      // User entered a new key
       this.apiKeys.github = githubToken;
       this.optionalServers.push('@modelcontextprotocol/server-github');
-      this.log('GitHub will be configured', 'success');
+      this.log('GitHub will be updated', 'success');
+    } else if (existingGithub && existingGithub !== 'REPLACE_WITH_GITHUB_TOKEN') {
+      // User pressed enter, keep existing
+      this.apiKeys.github = existingGithub;
+      this.optionalServers.push('@modelcontextprotocol/server-github');
+      this.log('Keeping existing GitHub configuration', 'info');
     } else {
       this.log('Skipping GitHub', 'info');
     }
@@ -234,6 +315,11 @@ STEP 3: Installing Components
         }
       });
       
+      // Always update Tavily server if it exists
+      if (this.apiKeys.tavily) {
+        this.createTavilyServer();
+      }
+      
       this.log(`Installed ${installed} components`, 'success');
       return installed > 0;
     } finally {
@@ -242,38 +328,29 @@ STEP 3: Installing Components
   }
 
   createTavilyServer() {
-    // Create a proper MCP-compliant Tavily server
+    // Create a proper MCP-compliant Tavily server (fixed version)
     const tavilyScript = `#!/usr/bin/env node
-// Tavily MCP Server - Proper Implementation
 const readline = require('readline');
 const https = require('https');
 
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 
-// Create readline interface for stdin/stdout communication
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
   terminal: false
 });
 
-// Helper to send JSON-RPC response
 function sendResponse(id, result, error = null) {
-  const response = {
-    jsonrpc: '2.0',
-    id: id
-  };
-  
+  const response = { jsonrpc: '2.0', id: id };
   if (error) {
     response.error = error;
   } else {
     response.result = result;
   }
-  
   console.log(JSON.stringify(response));
 }
 
-// Tavily search function
 async function searchTavily(query) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({
@@ -311,120 +388,82 @@ async function searchTavily(query) {
   });
 }
 
-// Handle incoming messages
 rl.on('line', async (line) => {
   try {
     const message = JSON.parse(line);
     
-    // Handle initialize request
     if (message.method === 'initialize') {
       sendResponse(message.id, {
-        protocolVersion: '2025-06-18',
-        capabilities: {
-          tools: {
-            list: true,
-            call: true
-          }
-        },
-        serverInfo: {
-          name: 'tavily-search',
-          version: '1.0.0'
-        }
+        protocolVersion: '2024-11-05',
+        capabilities: { tools: {} },
+        serverInfo: { name: 'tavily-search', version: '1.0.0' }
       });
       return;
     }
     
-    // Handle tools/list request
     if (message.method === 'tools/list') {
       sendResponse(message.id, {
-        tools: [
-          {
-            name: 'search',
-            description: 'Search the web using Tavily AI-optimized search',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                query: {
-                  type: 'string',
-                  description: 'Search query'
-                }
-              },
-              required: ['query']
-            }
+        tools: [{
+          name: 'tavily_search',
+          description: 'Search the web using Tavily AI-optimized search',
+          inputSchema: {
+            type: 'object',
+            properties: { query: { type: 'string', description: 'Search query' } },
+            required: ['query']
           }
-        ]
+        }]
       });
       return;
     }
     
-    // Handle tools/call request
     if (message.method === 'tools/call') {
       const { name, arguments: args } = message.params;
-      
-      if (name === 'search') {
+      if (name === 'tavily_search') {
         try {
           const results = await searchTavily(args.query);
-          
-          // Format results for MCP
-          const formattedResults = {
-            content: [
-              {
-                type: 'text',
-                text: results.answer || 'No direct answer available'
-              }
-            ]
-          };
-          
-          // Add search results
+          let responseText = '';
+          if (results.answer) responseText = results.answer + '\\n\\n';
           if (results.results && results.results.length > 0) {
-            const resultsText = results.results.map(r => 
-              \`**\${r.title}**\\n\${r.content}\\n[Source: \${r.url}]\\n\`
-            ).join('\\n---\\n');
-            
-            formattedResults.content.push({
-              type: 'text',
-              text: '\\n\\nSearch Results:\\n' + resultsText
+            responseText += 'Search Results:\\n\\n';
+            results.results.forEach((r, i) => {
+              responseText += \`\${i + 1}. **\${r.title}**\\n   \${r.content}\\n   Source: \${r.url}\\n\\n\`;
             });
           }
-          
-          sendResponse(message.id, formattedResults);
-        } catch (error) {
-          sendResponse(message.id, null, {
-            code: -32603,
-            message: 'Search failed: ' + error.message
+          sendResponse(message.id, {
+            content: [{ type: 'text', text: responseText || 'No results found' }]
           });
+        } catch (error) {
+          sendResponse(message.id, null, { code: -32603, message: 'Search failed: ' + error.message });
         }
       } else {
-        sendResponse(message.id, null, {
-          code: -32601,
-          message: 'Unknown tool: ' + name
-        });
+        sendResponse(message.id, null, { code: -32601, message: 'Unknown tool: ' + name });
       }
       return;
     }
     
-    // Handle other methods
-    sendResponse(message.id, null, {
-      code: -32601,
-      message: 'Method not found'
-    });
+    if (message.method === 'prompts/list' || message.method === 'resources/list') {
+      sendResponse(message.id, null, { code: -32601, message: 'Method not found' });
+      return;
+    }
     
+    if (message.method && message.method.startsWith('notifications/')) return;
+    
+    if (message.id !== undefined) {
+      sendResponse(message.id, null, { code: -32601, message: 'Method not found' });
+    }
   } catch (error) {
-    // If we can't parse the message or something goes wrong
-    console.error('Error:', error.message);
+    console.error('Parse error:', error.message);
   }
 });
 
-// Handle process termination
-process.on('SIGINT', () => {
-  process.exit(0);
-});
+console.error('Tavily MCP Server started');
+process.on('SIGINT', () => process.exit(0));
 `;
     
     const tavilyPath = path.join(this.mpcDir, 'tavily-server.js');
     fs.writeFileSync(tavilyPath, tavilyScript);
     fs.chmodSync(tavilyPath, '755');
-    this.log('Created Tavily MCP server', 'success');
+    this.log('Created/Updated Tavily MCP server', 'success');
   }
 
   generateConfig() {
