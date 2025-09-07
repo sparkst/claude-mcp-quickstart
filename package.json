@@ -1,37 +1,45 @@
 {
-  "name": "mcp-quickstart",
-  "version": "2.2.1",
-  "description": "Transform Claude Desktop into an AI powerhouse in 60 seconds - by Sparkry.AI",
+  "name": "claude-mcp-quickstart",
+  "version": "2.0.0",
+  "description": "MCP Quickstart with expert multi-disciplinary AI assistance",
   "main": "index.js",
+  "type": "module",
   "bin": {
-    "mcp-quickstart": "./index.js"
+    "claude-mcp-quickstart": "./index.js"
   },
   "scripts": {
-    "test": "node index.js verify"
+    "setup": "node setup.js",
+    "dev-mode": "node dev-mode.js",
+    "add-context7": "node add-context7.js",
+    "add-supabase": "node add-supabase.js",
+    "verify": "node index.js verify",
+    "quick-start": "node index.js quick-start"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server-filesystem": "latest",
+    "@modelcontextprotocol/server-memory": "latest",
+    "@modelcontextprotocol/server-brave-search": "latest",
+    "@modelcontextprotocol/server-github": "latest",
+    "@supabase/mcp-server": "latest",
+    "@context7/mcp-server": "latest",
+    "@keats/mcp-server-tavily": "latest",
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.12",
+    "ora": "^6.3.1",
+    "commander": "^11.0.0"
   },
   "keywords": [
     "mcp",
     "claude",
     "ai",
-    "model-context-protocol",
     "automation",
-    "anthropic",
-    "brave-search",
-    "tavily",
-    "github",
-    "sparkry"
+    "development",
+    "quickstart"
   ],
-  "author": "Sparkry.AI <hello@sparkry.ai>",
+  "author": "Sparkry.AI",
   "license": "MIT",
-  "engines": {
-    "node": ">=16.0.0"
-  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sparkst/mcp-quickstart.git"
-  },
-  "bugs": {
-    "url": "https://github.com/sparkst/mcp-quickstart/issues"
-  },
-  "homepage": "https://github.com/sparkst/mcp-quickstart#readme"
+    "url": "https://github.com/sparkst/claude-mcp-quickstart"
+  }
 }

@@ -1,178 +1,209 @@
-# MCP Quickstart by Sparkry.AI 🚀
+# Claude MCP Quickstart
 
-Transform Claude Desktop into a powerhouse AI assistant in 60 seconds. One command, zero complexity.
+Quick and easy setup for Model Context Protocol (MCP) servers with Claude Desktop, featuring expert multi-disciplinary AI assistance.
 
-[![NPM Version](https://img.shields.io/npm/v/mcp-quickstart.svg)](https://www.npmjs.com/package/mcp-quickstart)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Made by Sparkry.AI](https://img.shields.io/badge/Made%20by-Sparkry.AI-ff6b6b)](https://www.sparkry.ai)
-
-## 🎯 What is MCP Quickstart?
-
-MCP (Model Context Protocol) Quickstart is the fastest way to unlock Claude Desktop's hidden superpowers. With one command, you give Claude the ability to:
-
-- 📁 **Read & write files** on your computer
-- 🔍 **Search the web** with Brave and Tavily
-- 🐙 **Manage GitHub** repositories  
-- 🧠 **Remember context** across conversations
-- 🛠️ **Execute code** and automate tasks
-
-No configuration files. No manual setup. Just pure magic.
-
-## 🚀 Installation (60 Seconds)
+## Installation
 
 ```bash
-npx mcp-quickstart
+npx claude-mcp-quickstart
 ```
 
-That's it. Follow the interactive wizard, and you're done.
+Or install globally:
 
-## 🎭 The Experience
-
-### First Run
-```
-╔════════════════════════════════════════╗
-║         MCP Quickstart Setup           ║
-║         First Time Setup Wizard        ║
-╚════════════════════════════════════════╝
-
-Welcome! Let's set up your AI-powered Claude Desktop.
-This takes about 60 seconds.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 1: Search Services (Optional)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📍 Brave Search (Private, no tracking)
-   Get free API key: https://api.search.brave.com/app/keys
-   (2,000 free searches/month)
-
-Brave API Key (press Enter to skip): [PASTE KEY OR SKIP]
-```
-
-### Returning User
-```
-📍 Brave Search (Private, no tracking)
-   Get free API key: https://api.search.brave.com/app/keys
-   (2,000 free searches/month)
-
-Brave API Key [Current: sk-Bv...3aF] (Enter to keep, or paste new): [ENTER]
-→ Keeping existing Brave Search configuration
-```
-
-## 🎁 What You Get
-
-### Core Features (Always Enabled)
-- **📂 Filesystem Access** - Claude can read, write, and manage files in your workspace
-- **🧠 Persistent Memory** - Claude remembers important context across conversations
-- **📊 Data Processing** - Analyze CSVs, JSON, and other data formats
-
-### Optional Superpowers (With API Keys)
-- **🔍 Brave Search** - Private web search (2,000 free searches/month)
-- **🎯 Tavily Search** - AI-optimized research (1,000 free searches/month)  
-- **🐙 GitHub Integration** - Manage repos, create issues, review PRs
-
-## 🧪 Test Your Setup
-
-After installation, tell Claude:
-
-```
-Show me what MCP tools I have
-```
-
-Claude will display all available capabilities and provide test commands.
-
-## 📸 Real Examples
-
-### Web Research
-```
-User: Search for the latest developments in quantum computing
-
-Claude: I'll search for the latest quantum computing developments.
-[Uses Brave Search to find current information]
-[Returns summarized findings with sources]
-```
-
-### File Management
-```
-User: Create a Python script that analyzes sales data
-
-Claude: I'll create that Python script for you.
-[Creates analyze_sales.py in your workspace]
-[Writes complete, functional code]
-```
-
-### GitHub Workflow
-```
-User: What issues are open in my main repository?
-
-Claude: Let me check your GitHub issues.
-[Lists all open issues with details]
-[Can create, update, or close issues]
-```
-
-## 🔧 Advanced Features
-
-### Update Services Anytime
 ```bash
-npx mcp-quickstart setup
+npm install -g claude-mcp-quickstart
+claude-mcp-quickstart setup
 ```
 
-### Verify Installation
+## Features
+
+### Core MCP Servers
+- **Filesystem** - Read/write files in your workspace
+- **Memory** - Persistent knowledge storage
+- **GitHub** - Code repository management
+- **Supabase** - Database and authentication
+- **Context7** - Real-time documentation search
+- **Web Search** - Brave and Tavily integration
+
+### Expert Mode
+Combines expertise from:
+- Amazon Principal Engineer (system design, scalability)
+- Principal Product Manager (user focus, prioritization)
+- UX/UI Designer (usability, accessibility)
+- Senior Developer (modern frameworks, best practices)
+- QA/SDET (testing, quality assurance)
+
+## Quick Start
+
+### 1. Complete Setup
 ```bash
-npx mcp-quickstart verify
+npx claude-mcp-quickstart quick-start
 ```
 
-### Check Configuration
-Your configuration lives at:
-- **Mac**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%/Claude/claude_desktop_config.json`
-- **Linux**: `~/.config/claude/claude_desktop_config.json`
+This will:
+- Configure all MCP servers
+- Set up your workspace
+- Install expert mode context
+- Prepare Dev Mode activation
 
-## 🆘 Troubleshooting
+### 2. Restart Claude Desktop
 
-### Claude doesn't see the tools?
-1. Restart Claude Desktop after installation
-2. Run `npx mcp-quickstart verify` to check setup
-3. Try the command: "Show me what MCP tools I have"
+### 3. Activate Dev Mode
+In Claude, type:
+```
+Dev Mode
+```
 
-### API Key Issues?
-- Re-run `npx mcp-quickstart setup` to update keys
-- Existing keys are preserved (shown as `sk-Bv...3aF`)
-- Press Enter to keep, or paste new to update
+## Commands
 
-### Need to start fresh?
+### Setup Commands
 ```bash
-rm -rf ~/.mcp-servers
-rm ~/Library/Application\ Support/Claude/claude_desktop_config.json
-npx mcp-quickstart
+claude-mcp-quickstart setup          # Interactive setup
+claude-mcp-quickstart add-supabase   # Add Supabase
+claude-mcp-quickstart add-context7   # Add Context7
+claude-mcp-quickstart verify         # Check configuration
 ```
 
-## 🏢 About Sparkry.AI
+### Dev Mode Commands (in Claude)
+```
+Dev Mode                           # Activate expert mode
+Dev Mode: new feature [desc]       # Build feature
+Dev Mode: fix [issue]             # Debug and fix
+Dev Mode: ship it                 # Deploy checklist
+Dev Mode: analyze                 # Code review
+```
 
-[Sparkry.AI](https://www.sparkry.ai) builds tools that make AI accessible and powerful for everyone. We believe AI should augment human capability, not complicate it.
+## Configuration
 
-**MCP Quickstart** embodies our philosophy: powerful technology should be simple to use.
+### Environment Variables
+Create a `.env` file in your project:
 
-## 🤝 Contributing
+```env
+GITHUB_TOKEN=your-github-token
+SUPABASE_URL=your-project-url
+SUPABASE_ANON_KEY=your-anon-key
+BRAVE_API_KEY=your-brave-key      # Optional
+TAVILY_API_KEY=your-tavily-key    # Optional
+```
 
-We love contributions! Whether it's:
-- 🐛 Bug reports
-- 💡 Feature requests
-- 📖 Documentation improvements
-- 🔧 Code contributions
+### Workspace Structure
+```
+~/claude-mcp-workspace/
+├── DEV_MODE.md           # Activation instructions
+├── BOOTSTRAP_LOVABLE.md  # Framework patterns
+├── PRINCIPLES.md         # Operating principles
+├── CONTEXT.md           # Combined context
+└── your-projects/       # Your code
+```
 
-Visit our [GitHub Issues](https://github.com/sparkst/mcp-quickstart/issues) to get started.
+## Expert Mode Principles
 
-## 📜 License
+### Communication
+- Concise, direct answers
+- Code over explanation
+- Solutions over discussion
 
-MIT © [Sparkry.AI](https://www.sparkry.ai)
+### Quality
+- Simple over clever
+- Tested over perfect
+- Maintainable over optimal
+
+### Decision Making
+- User impact first
+- Data-driven choices
+- Progressive enhancement
+
+## Example Usage
+
+### Building a Feature
+```
+You: Dev Mode: add user authentication
+
+Claude: [DEV MODE ACTIVE]
+✓ Checking Supabase schema
+✓ Implementing auth
+
+[Working code implementation]
+
+Setup: 10 minutes
+Includes: Email/password, OAuth
+Alternative: Magic links (simpler)
+```
+
+### Performance Analysis
+```
+You: Dev Mode: why is the app slow?
+
+Claude: [DEV MODE ACTIVE]
+✓ Analyzing performance
+
+Bottlenecks:
+1. Unindexed queries (70% impact)
+2. Large bundle (2.3MB)
+
+Fixes:
+[Specific code changes]
+
+Expected improvement: 60-70%
+```
+
+### Architecture Review
+```
+You: Should we use microservices?
+
+Claude: Current scale doesn't justify complexity.
+Monolith can handle 100x load with:
+- Connection pooling
+- Redis caching
+- CDN assets
+
+Revisit at 10K concurrent users.
+```
+
+## Troubleshooting
+
+### MCP servers not working
+1. Restart Claude Desktop after setup
+2. Check configuration: `claude-mcp-quickstart verify`
+3. Ensure API keys are valid
+
+### Dev Mode not activating
+1. Check context files exist in workspace
+2. Verify MCP servers are configured
+3. Try "Dev Mode: check setup" command
+
+### Context7 not finding libraries
+1. Use library name, not package name
+2. Check if library is in Context7 database
+3. Try alternative names (React vs react)
+
+## Development
+
+### Contributing
+PRs welcome! Please:
+- Keep the expert persona professional
+- Maintain backwards compatibility
+- Add tests for new features
+
+### Local Development
+```bash
+git clone https://github.com/sparkst/claude-mcp-quickstart
+cd claude-mcp-quickstart
+npm install
+npm link
+claude-mcp-quickstart setup
+```
+
+## License
+
+MIT
+
+## Support
+
+- [GitHub Issues](https://github.com/sparkst/claude-mcp-quickstart/issues)
+- [Documentation](https://modelcontextprotocol.io)
+- [Sparkry.AI](https://sparkry.ai)
 
 ---
 
-<div align="center">
-  
-**Built with ❤️ by [Sparkry.AI](https://www.sparkry.ai)**
-
-[Website](https://www.sparkry.ai) • [GitHub](https://github.com/sparkst) • [Twitter](https://twitter.com/sparkryai)
-
-</div>
+*Built by [Sparkry.AI](https://sparkry.ai) - Making AI development efficient and maintainable*
