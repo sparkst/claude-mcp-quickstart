@@ -119,12 +119,14 @@ class MCPInstaller {
   async setupWizard() {
     console.log(`
 ╔════════════════════════════════════════╗
-║         MCP Quickstart Setup           ║
+║      MCP Quickstart by Sparkry.AI      ║
 ║         First Time Setup Wizard        ║
 ╚════════════════════════════════════════╝
 
-Welcome! Let's set up your AI-powered Claude Desktop.
+Welcome! Let's supercharge your Claude Desktop.
 This takes about 60 seconds.
+
+🌟 Built by Sparkry.AI - https://www.sparkry.ai
 `);
 
     // Load existing configuration
@@ -533,68 +535,196 @@ process.on('SIGINT', () => process.exit(0));
     this.log('Generated Claude configuration', 'success');
   }
 
-  createWelcomeFile() {
-    const welcomeFile = path.join(this.workspace, 'README.md');
-    const searchInfo = [];
+  createMCPCapabilitiesFile() {
+    const capabilitiesFile = path.join(this.workspace, 'MCP-CAPABILITIES.md');
+    const currentDate = new Date().toISOString();
     
-    if (this.apiKeys.brave) searchInfo.push('- ✅ Brave Search');
-    if (this.apiKeys.tavily) searchInfo.push('- ✅ Tavily Search');
-    if (this.apiKeys.github) searchInfo.push('- ✅ GitHub Integration');
-    
-    fs.writeFileSync(welcomeFile, `# Welcome to Your AI Workspace! 🎉
+    const capabilities = `# MCP (Model Context Protocol) Capabilities
 
-Your MCP setup is complete. Here's what you can do:
+**Powered by Sparkry.AI** - https://www.sparkry.ai  
+*Configuration Date: ${currentDate}*
 
-## Test Commands for Claude
+## 🎯 Your Active MCP Tools
 
-### Basic Test
+You have been enhanced with the following capabilities through MCP:
+
+### 📂 Filesystem Tools
+- **read_file** - Read any file in ${this.workspace}
+- **write_file** - Create or overwrite files
+- **edit_file** - Make line-by-line edits to existing files
+- **list_directory** - Browse folder contents
+- **create_directory** - Create new folders
+- **search_files** - Find files by name or content
+- **get_file_info** - Get metadata about files
+
+### 🧠 Memory Tools
+- **create_entities** - Store important information about people, projects, or concepts
+- **create_relations** - Link related information together
+- **search_nodes** - Find stored information by keywords
+- **open_nodes** - Retrieve specific stored information
+- **read_graph** - View all stored knowledge
+
+${this.apiKeys.brave ? `### 🔍 Brave Search Tools
+- **brave_web_search** - Search the web privately (2,000 searches/month)
+- **brave_local_search** - Find local businesses and places
+` : ''}
+${this.apiKeys.tavily ? `### 🎯 Tavily Search Tools
+- **tavily_search** - AI-optimized web search (1,000 searches/month)
+` : ''}
+${this.apiKeys.github ? `### 🐙 GitHub Tools
+- **search_repositories** - Find GitHub repos
+- **create_repository** - Create new repos
+- **get_file_contents** - Read files from repos
+- **push_files** - Commit files to repos
+- **create_issue** - Open new issues
+- **create_pull_request** - Submit PRs
+- **list_commits** - View commit history
+- **fork_repository** - Fork repos to your account
+` : ''}
+
+## 📁 Your Workspace
+
+All file operations happen in: \`${this.workspace}\`
+
+This is your personal sandbox where I can:
+- Create and edit code files
+- Store data and documents  
+- Organize projects in folders
+- Build complete applications
+
+## 💡 Example Commands
+
+Try these commands to test your new capabilities:
+
+### Basic File Operations
 \`\`\`
-Show me my MCP capabilities
-\`\`\`
-
-### File Operations
-\`\`\`
-List all files in my workspace
-Create a Python script that prints "Hello World"
+Create a Python script that prints hello world
 \`\`\`
 
 ### Memory Test
 \`\`\`
-Remember: My favorite color is blue
-What's my favorite color?
+Remember that my favorite programming language is Python
 \`\`\`
 
-${searchInfo.length > 0 ? `### Search Tests
-${this.apiKeys.brave ? `\`\`\`
-Search the web for the latest AI news
-\`\`\`\n` : ''}
-${this.apiKeys.tavily ? `\`\`\`
-Search for machine learning tutorials
-\`\`\`\n` : ''}` : ''}
-
-${this.apiKeys.github ? `### GitHub Test
+### Web Search (if configured)
 \`\`\`
-Show my recent GitHub activity
+Search for the latest news about artificial intelligence
 \`\`\`
-` : ''}
 
-## Your Configuration
+### GitHub (if configured)
+\`\`\`
+Show my recent GitHub repositories
+\`\`\`
 
-${searchInfo.length > 0 ? searchInfo.join('\n') : '- No search services configured'}
-- ✅ Filesystem Access
-- ✅ Persistent Memory
+## 🚀 What You Can Build
 
-## Need Help?
+With these tools, we can:
+- **Automate Tasks** - Create scripts that handle repetitive work
+- **Build Applications** - Develop full programs from scratch
+- **Analyze Data** - Process CSVs, JSON, and other data formats
+- **Manage Projects** - Organize code, documentation, and resources
+- **Research Topics** - Combine web search with local note-taking
+- **Version Control** - Manage code with GitHub integration
 
-Just ask Claude! For example:
-- "Help me create a web scraper"
-- "Build a todo list app"
-- "Explain how MCP works"
+## 🆘 Troubleshooting
 
-Workspace location: ${this.workspace}
-Config location: ${this.claudeConfig}
+If tools aren't working:
+1. Make sure you restarted Claude Desktop after setup
+2. Check that files are in \`${this.workspace}\`
+3. For search tools, verify your API keys are valid
 
-Happy coding! 🚀
+## 📚 Learn More
+
+- **MCP Documentation**: https://modelcontextprotocol.io
+- **Sparkry.AI**: https://www.sparkry.ai
+- **Support**: Run \`npx mcp-quickstart verify\` in terminal
+
+---
+
+*MCP Quickstart by Sparkry.AI - Making AI accessible to everyone*
+`;
+    
+    fs.writeFileSync(capabilitiesFile, capabilities);
+    this.log('Created MCP capabilities reference', 'success');
+  }
+
+  createWelcomeFile() {
+    const welcomeFile = path.join(this.workspace, 'README.md');
+    const searchInfo = [];
+    
+    if (this.apiKeys.brave) searchInfo.push('- ✅ Brave Search (private web search)');
+    if (this.apiKeys.tavily) searchInfo.push('- ✅ Tavily Search (AI-optimized search)');
+    if (this.apiKeys.github) searchInfo.push('- ✅ GitHub Integration (repo management)');
+    
+    fs.writeFileSync(welcomeFile, `# Welcome to Your AI-Powered Workspace! 🎉
+
+**Powered by Sparkry.AI** - https://www.sparkry.ai
+
+Your MCP (Model Context Protocol) setup is complete! Claude now has superpowers.
+
+## 🎯 Quick Test
+
+Tell Claude exactly this:
+\`\`\`
+Show me what MCP tools I have
+\`\`\`
+
+Claude will read the MCP-CAPABILITIES.md file and explain everything you can do.
+
+## ✅ Your Configuration
+
+### Core Features (Always Active)
+- ✅ **Filesystem Access** - Read/write files in this workspace
+- ✅ **Persistent Memory** - Remember information across chats
+
+### Optional Features (Configured)
+${searchInfo.length > 0 ? searchInfo.join('\n') : '- No optional services configured'}
+
+## 📂 Workspace Location
+
+All file operations happen here:
+\`${this.workspace}\`
+
+## 🧪 Test Commands
+
+### File Operations
+\`\`\`
+Create a hello.py file
+List all files in my workspace
+\`\`\`
+
+### Memory
+\`\`\`
+Remember: My birthday is January 1st
+What's my birthday?
+\`\`\`
+
+${this.apiKeys.brave || this.apiKeys.tavily ? `### Web Search
+\`\`\`
+Search for the latest AI news
+\`\`\`` : ''}
+
+${this.apiKeys.github ? `### GitHub
+\`\`\`
+Show my GitHub repositories
+\`\`\`` : ''}
+
+## 🚀 What's Next?
+
+1. Try the test commands above
+2. Ask Claude to help you build something
+3. Explore the MCP-CAPABILITIES.md file for full details
+
+## 📚 Resources
+
+- **Full Capabilities**: Read \`MCP-CAPABILITIES.md\` in this folder
+- **Add More Services**: Run \`npx mcp-quickstart setup\`
+- **Verify Setup**: Run \`npx mcp-quickstart verify\`
+- **Sparkry.AI**: https://www.sparkry.ai
+
+---
+
+*Built with ❤️ by Sparkry.AI - Making AI accessible to everyone*
 `);
     
     this.log('Created welcome file', 'success');
@@ -606,29 +736,58 @@ Happy coding! 🚀
 ║        ✅ Setup Complete!              ║
 ╚════════════════════════════════════════╝
 
-🎉 Your AI-powered Claude is ready!
+🎉 Claude Desktop is now SUPERCHARGED!
 
-Configured Services:
-- ✅ Filesystem (read/write files)
-- ✅ Memory (persistent across chats)
-${this.apiKeys.brave ? '- ✅ Brave Search (web search)' : ''}
-${this.apiKeys.tavily ? '- ✅ Tavily Search (AI search)' : ''}
-${this.apiKeys.github ? '- ✅ GitHub (repo management)' : ''}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WHAT YOU NOW HAVE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Next Steps:
-1. Restart Claude Desktop
-2. Say: "Show me my MCP capabilities"
-3. Check ${this.workspace}/README.md
+Core Capabilities (Always Active):
+  📂 Filesystem - Read/write/edit files
+  🧠 Memory - Persistent knowledge storage
 
-Need to add more services later?
-Run: npx mcp-quickstart setup
+${this.apiKeys.brave || this.apiKeys.tavily || this.apiKeys.github ? 'Enhanced Capabilities (Configured):' : ''}
+${this.apiKeys.brave ? '  🔍 Brave Search - Private web search' : ''}
+${this.apiKeys.tavily ? '  🎯 Tavily Search - AI-optimized search' : ''}
+${this.apiKeys.github ? '  🐙 GitHub - Repository management' : ''}
 
-Enjoy your supercharged Claude! 🚀
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NEXT STEPS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣  Restart Claude Desktop
+
+2️⃣  Tell Claude EXACTLY this:
+    "Show me what MCP tools I have"
+
+3️⃣  Claude will explain everything!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+YOUR WORKSPACE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 ${this.workspace}
+
+This is where Claude can:
+  • Create files and folders
+  • Build applications
+  • Store your data
+  • Manage projects
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌟 Powered by Sparkry.AI
+   https://www.sparkry.ai
+   
+💡 Need help? Run: npx mcp-quickstart verify
+🔧 Add services: npx mcp-quickstart setup
+
+Enjoy your AI superpowers! 🚀
 `);
   }
 
   verify() {
-    console.log('\n🔍 Verifying installation...\n');
+    console.log('\n🔍 Verifying MCP installation...\n');
     
     const checks = [
       ['Node.js', () => this.execCommand('node --version')],
@@ -666,6 +825,14 @@ Enjoy your supercharged Claude! 🚀
     const percentage = Math.round((passed / checks.length) * 100);
     console.log(`\n📊 Result: ${passed}/${checks.length} checks passed (${percentage}%)\n`);
     
+    if (percentage === 100) {
+      console.log('🎉 Everything is working perfectly!');
+      console.log('🌟 Powered by Sparkry.AI - https://www.sparkry.ai\n');
+    } else {
+      console.log('⚠️  Some checks failed. Try running setup again:');
+      console.log('   npx mcp-quickstart\n');
+    }
+    
     return percentage === 100;
   }
 
@@ -687,6 +854,7 @@ Enjoy your supercharged Claude! 🚀
     
     this.generateConfig();
     this.createWelcomeFile();
+    this.createMCPCapabilitiesFile();
     
     this.verify();
     this.printSummary();

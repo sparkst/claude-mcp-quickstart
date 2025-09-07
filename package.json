@@ -1,7 +1,7 @@
 {
   "name": "mcp-quickstart",
-  "version": "2.0.4",
-  "description": "One-command MCP setup for Claude Desktop with guided API key setup",
+  "version": "2.2.0",
+  "description": "Transform Claude Desktop into an AI powerhouse in 60 seconds - by Sparkry.AI",
   "main": "index.js",
   "bin": {
     "mcp-quickstart": "./index.js"
@@ -18,9 +18,10 @@
     "anthropic",
     "brave-search",
     "tavily",
-    "github"
+    "github",
+    "sparkry"
   ],
-  "author": "sparkst",
+  "author": "Sparkry.AI <hello@sparkry.ai>",
   "license": "MIT",
   "engines": {
     "node": ">=16.0.0"
