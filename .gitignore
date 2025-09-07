@@ -1,0 +1,7 @@
+node_modules/
+*.log
+.DS_Store
+*.backup.*
+dist/
+npm-package/
+test/

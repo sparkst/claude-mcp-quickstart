@@ -1,0 +1,5 @@
+# ignore everything except what we need for npm
+*
+!index.js
+!package.json
+!README.md
