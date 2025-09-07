@@ -1,7 +1,7 @@
 {
   "name": "mcp-quickstart",
-  "version": "1.0.0",
-  "description": "One-command MCP setup for Claude Desktop",
+  "version": "2.0.0",
+  "description": "One-command MCP setup for Claude Desktop with guided API key setup",
   "main": "index.js",
   "bin": {
     "mcp-quickstart": "./index.js"
@@ -15,7 +15,10 @@
     "ai",
     "model-context-protocol",
     "automation",
-    "anthropic"
+    "anthropic",
+    "brave-search",
+    "tavily",
+    "github"
   ],
   "author": "sparkst",
   "license": "MIT",
