@@ -5,3 +5,13 @@ node_modules/
 dist/
 npm-package/
 test/
+
+# Claude Code secret guardrails
+.env
+.env.*
+*.pem
+*.key
+**/secrets/**
+**/credentials/**
+**/.aws/**
+**/.ssh/**

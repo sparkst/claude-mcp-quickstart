@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import chalk from 'chalk';
-import fs from 'fs/promises';
-import path from 'path';
-import os from 'os';
+import chalk from "chalk";
+import fs from "fs/promises";
+import path from "path";
+import os from "os";
 
 const DEV_MODE_ACTIVE = `
 # DEV MODE ACTIVE
@@ -47,15 +47,19 @@ Expert multi-disciplinary mode engaged.
 `;
 
 async function activateDevMode() {
-  console.log(chalk.cyan('\n⚡ Activating Dev Mode\n'));
-  
+  console.log(chalk.cyan("\n⚡ Activating Dev Mode\n"));
+
   try {
-    const workspacePath = path.join(os.homedir(), 'claude-mcp-workspace');
-    
+    const workspacePath = path.join(os.homedir(), "claude-mcp-workspace");
+
     // Check context files
-    console.log(chalk.yellow('Checking context:'));
-    const contextFiles = ['DEV_MODE.md', 'BOOTSTRAP_LOVABLE.md', 'PRINCIPLES.md'];
-    
+    console.log(chalk.yellow("Checking context:"));
+    const contextFiles = [
+      "DEV_MODE.md",
+      "BOOTSTRAP_LOVABLE.md",
+      "PRINCIPLES.md",
+    ];
+
     for (const file of contextFiles) {
       try {
         await fs.access(path.join(workspacePath, file));
@@ -64,37 +68,40 @@ async function activateDevMode() {
         console.log(chalk.red(`  ✗ ${file} (missing)`));
       }
     }
-    
+
     // Check MCP servers
-    console.log(chalk.yellow('\nChecking MCP servers:'));
+    console.log(chalk.yellow("\nChecking MCP servers:"));
     const configPath = path.join(
       os.homedir(),
-      'Library',
-      'Application Support',
-      'Claude',
-      'claude_desktop_config.json'
+      "Library",
+      "Application Support",
+      "Claude",
+      "claude_desktop_config.json",
     );
-    
+
     try {
-      const config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
+      const config = JSON.parse(await fs.readFile(configPath, "utf-8"));
       const servers = Object.keys(config.mcpServers || {});
-      
-      ['filesystem', 'memory', 'github', 'supabase', 'context7'].forEach(server => {
-        if (servers.includes(server)) {
-          console.log(chalk.green(`  ✓ ${server}`));
-        } else {
-          console.log(chalk.yellow(`  ⚠ ${server} (not configured)`));
-        }
-      });
+
+      ["filesystem", "memory", "github", "supabase", "context7"].forEach(
+        (server) => {
+          if (servers.includes(server)) {
+            console.log(chalk.green(`  ✓ ${server}`));
+          } else {
+            console.log(chalk.yellow(`  ⚠ ${server} (not configured)`));
+          }
+        },
+      );
     } catch {
-      console.log(chalk.red('  ✗ Could not read configuration'));
+      console.log(chalk.red("  ✗ Could not read configuration"));
     }
-    
+
     // Create activation marker
     const timestamp = new Date().toISOString();
     await fs.writeFile(
-      path.join(workspacePath, 'ACTIVE.md'),
-      DEV_MODE_ACTIVE + `
+      path.join(workspacePath, "ACTIVE.md"),
+      DEV_MODE_ACTIVE +
+        `
 - Workspace: ${workspacePath}
 - Activated: ${timestamp}
 - Mode: Expert Multi-Disciplinary
@@ -107,18 +114,17 @@ Copy and paste into Claude:
 
 ---
 *Quality without complexity. Ship fast, maintain forever.*
-`
+`,
     );
-    
-    console.log(chalk.green('\n✅ Dev Mode Activated!\n'));
-    console.log(chalk.cyan('Test commands:'));
+
+    console.log(chalk.green("\n✅ Dev Mode Activated!\n"));
+    console.log(chalk.cyan("Test commands:"));
     console.log(chalk.gray('  "Dev Mode: check setup"'));
     console.log(chalk.gray('  "Dev Mode: analyze my code"'));
     console.log(chalk.gray('  "Dev Mode: create auth flow"'));
     console.log(chalk.gray('  "Dev Mode: optimize database"\n'));
-    
   } catch (error) {
-    console.error(chalk.red('Activation failed:'), error.message);
+    console.error(chalk.red("Activation failed:"), error.message);
     process.exit(1);
   }
 }

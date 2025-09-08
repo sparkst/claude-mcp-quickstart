@@ -1,17 +1,18 @@
 {
   "name": "claude-mcp-quickstart",
-  "version": "2.0.1",
+  "version": "2.2.2",
   "description": "MCP Quickstart with expert multi-disciplinary AI assistance",
   "main": "index.js",
   "type": "module",
   "bin": {
-    "claude-mcp-quickstart": "./index.js"
+    "claude-mcp-quickstart": "index.js"
   },
   "scripts": {
     "setup": "node setup.js",
     "dev-mode": "node dev-mode.js",
     "verify": "node index.js verify",
-    "quick-start": "node index.js quick-start"
+    "quick-start": "node index.js quick-start",
+    "test": "vitest"
   },
   "dependencies": {
     "@modelcontextprotocol/server-filesystem": "latest",
@@ -26,6 +27,10 @@
     "ora": "^6.3.1",
     "commander": "^11.0.0"
   },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "tmp-promise": "^3.0.0"
+  },
   "keywords": [
     "mcp",
     "claude",
@@ -38,6 +43,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sparkst/claude-mcp-quickstart"
+    "url": "git+https://github.com/sparkst/claude-mcp-quickstart.git"
   }
 }
