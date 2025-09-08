@@ -17,13 +17,14 @@ claude-mcp-quickstart setup
 
 ## Features
 
-### Core MCP Servers
+### MCP Servers
 - **Filesystem** - Read/write files in your workspace
 - **Memory** - Persistent knowledge storage
 - **GitHub** - Code repository management
-- **Supabase** - Database and authentication
-- **Context7** - Real-time documentation search
-- **Web Search** - Brave and Tavily integration
+- **Supabase** - Database operations (`@joshuarileydev/supabase-mcp-server`)
+- **Context7** - Documentation search (`@upstash/context7-mcp`)
+- **Brave Search** - Web search (`@brave/brave-search-mcp-server`)
+- **Tavily** - AI-optimized search (`tavily-mcp`)
 
 ### Expert Mode
 Combines expertise from:
@@ -40,15 +41,25 @@ Combines expertise from:
 npx claude-mcp-quickstart quick-start
 ```
 
-This will:
-- Configure all MCP servers
-- Set up your workspace
-- Install expert mode context
-- Prepare Dev Mode activation
+### 2. Configure API Keys
 
-### 2. Restart Claude Desktop
+#### Supabase
+Get your API key from your Supabase project settings.
 
-### 3. Activate Dev Mode
+#### Context7
+Two options:
+- **Remote (Recommended)**: No API key needed
+  - Settings > Connectors > Add Custom Connector
+  - Name: `Context7`
+  - URL: `https://mcp.context7.com/mcp`
+- **Local**: Requires API key from Context7
+
+#### Brave Search
+Get API key from [Brave Search API](https://brave.com/search/api/)
+
+### 3. Restart Claude Desktop
+
+### 4. Activate Dev Mode
 In Claude, type:
 ```
 Dev Mode
@@ -59,9 +70,8 @@ Dev Mode
 ### Setup Commands
 ```bash
 claude-mcp-quickstart setup          # Interactive setup
-claude-mcp-quickstart add-supabase   # Add Supabase
-claude-mcp-quickstart add-context7   # Add Context7
 claude-mcp-quickstart verify         # Check configuration
+claude-mcp-quickstart dev-mode       # Activate expert mode
 ```
 
 ### Dev Mode Commands (in Claude)
@@ -75,18 +85,53 @@ Dev Mode: analyze                 # Code review
 
 ## Configuration
 
-### Environment Variables
-Create a `.env` file in your project:
-
-```env
-GITHUB_TOKEN=your-github-token
-SUPABASE_URL=your-project-url
-SUPABASE_ANON_KEY=your-anon-key
-BRAVE_API_KEY=your-brave-key      # Optional
-TAVILY_API_KEY=your-tavily-key    # Optional
+The setup will modify your Claude Desktop config at:
+```
+~/Library/Application Support/Claude/claude_desktop_config.json
 ```
 
-### Workspace Structure
+Example configuration:
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/you/claude-mcp-workspace"]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "your-token"
+      }
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@joshuarileydev/supabase-mcp-server"],
+      "env": {
+        "SUPABASE_API_KEY": "your-api-key"
+      }
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "your-key"]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@brave/brave-search-mcp-server"],
+      "env": {
+        "BRAVE_API_KEY": "your-key"
+      }
+    }
+  }
+}
+```
+
+## Workspace Structure
 ```
 ~/claude-mcp-workspace/
 ├── DEV_MODE.md           # Activation instructions
@@ -147,19 +192,6 @@ Fixes:
 Expected improvement: 60-70%
 ```
 
-### Architecture Review
-```
-You: Should we use microservices?
-
-Claude: Current scale doesn't justify complexity.
-Monolith can handle 100x load with:
-- Connection pooling
-- Redis caching
-- CDN assets
-
-Revisit at 10K concurrent users.
-```
-
 ## Troubleshooting
 
 ### MCP servers not working
@@ -167,15 +199,19 @@ Revisit at 10K concurrent users.
 2. Check configuration: `claude-mcp-quickstart verify`
 3. Ensure API keys are valid
 
-### Dev Mode not activating
-1. Check context files exist in workspace
-2. Verify MCP servers are configured
-3. Try "Dev Mode: check setup" command
+### Package installation errors
+Make sure you have Node.js 18+ installed:
+```bash
+node --version
+```
 
-### Context7 not finding libraries
-1. Use library name, not package name
-2. Check if library is in Context7 database
-3. Try alternative names (React vs react)
+### Supabase connection issues
+- Use service role key for full access
+- Or use anon key for client-safe operations
+
+### Context7 not finding docs
+- Try the remote connection method (no API key needed)
+- Check library name spelling
 
 ## Development
 
@@ -201,7 +237,7 @@ MIT
 ## Support
 
 - [GitHub Issues](https://github.com/sparkst/claude-mcp-quickstart/issues)
-- [Documentation](https://modelcontextprotocol.io)
+- [MCP Documentation](https://modelcontextprotocol.io)
 - [Sparkry.AI](https://sparkry.ai)
 
 ---

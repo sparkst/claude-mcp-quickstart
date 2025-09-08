@@ -43,115 +43,6 @@ program
   });
 
 program
-  .command('add-supabase')
-  .description('Add Supabase MCP server')
-  .action(async () => {
-    console.log(chalk.cyan('\n🗄️ Adding Supabase\n'));
-    
-    const { default: inquirer } = await import('inquirer');
-    
-    const configPath = path.join(
-      os.homedir(),
-      'Library',
-      'Application Support',
-      'Claude',
-      'claude_desktop_config.json'
-    );
-    
-    let config = {};
-    try {
-      config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
-    } catch {
-      config = { mcpServers: {} };
-    }
-    
-    const { url, key } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'url',
-        message: 'Supabase URL:',
-        validate: input => input.includes('supabase.co') || 'Invalid URL'
-      },
-      {
-        type: 'password',
-        name: 'key',
-        message: 'Supabase Anon Key:'
-      }
-    ]);
-    
-    config.mcpServers.supabase = {
-      command: "npx",
-      args: ["-y", "@supabase/mcp-server"],
-      env: {
-        SUPABASE_URL: url,
-        SUPABASE_ANON_KEY: key
-      }
-    };
-    
-    await fs.writeFile(configPath, JSON.stringify(config, null, 2));
-    console.log(chalk.green('✅ Supabase configured\n'));
-  });
-
-program
-  .command('add-context7')
-  .description('Add Context7 documentation search')
-  .action(async () => {
-    console.log(chalk.cyan('\n📚 Adding Context7\n'));
-    
-    const configPath = path.join(
-      os.homedir(),
-      'Library',
-      'Application Support',
-      'Claude',
-      'claude_desktop_config.json'
-    );
-    
-    let config = {};
-    try {
-      config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
-    } catch {
-      config = { mcpServers: {} };
-    }
-    
-    config.mcpServers.context7 = {
-      command: "npx",
-      args: ["-y", "@context7/mcp-server"]
-    };
-    
-    await fs.writeFile(configPath, JSON.stringify(config, null, 2));
-    
-    // Add instructions
-    const workspacePath = path.join(os.homedir(), 'claude-mcp-workspace');
-    await fs.mkdir(workspacePath, { recursive: true });
-    
-    await fs.writeFile(
-      path.join(workspacePath, 'CONTEXT7.md'),
-      `# Context7 Documentation Search
-
-## Usage
-When asking about libraries or frameworks, Context7 automatically:
-1. Resolves the library ID
-2. Fetches official documentation
-3. Provides accurate, up-to-date answers
-
-## Examples
-- "How do I use React hooks?"
-- "Explain Supabase auth"
-- "Next.js routing best practices"
-
-## Common Libraries
-- React: /facebook/react
-- Vue: /vuejs/core
-- Next.js: /vercel/next.js
-- Supabase: /supabase/supabase
-- Node.js: /nodejs/node
-`
-    );
-    
-    console.log(chalk.green('✅ Context7 configured\n'));
-  });
-
-program
   .command('verify')
   .description('Verify MCP configuration')
   .action(async () => {
@@ -171,7 +62,7 @@ program
       
       console.log(chalk.yellow('MCP Servers:'));
       const required = ['filesystem', 'memory'];
-      const optional = ['github', 'supabase', 'context7', 'brave-search', 'tavily-search'];
+      const optional = ['github', 'brave-search', 'tavily-search'];
       
       [...required, ...optional].forEach(server => {
         const isRequired = required.includes(server);

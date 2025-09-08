@@ -10,19 +10,17 @@
   "scripts": {
     "setup": "node setup.js",
     "dev-mode": "node dev-mode.js",
-    "add-context7": "node add-context7.js",
-    "add-supabase": "node add-supabase.js",
     "verify": "node index.js verify",
     "quick-start": "node index.js quick-start"
   },
   "dependencies": {
     "@modelcontextprotocol/server-filesystem": "latest",
     "@modelcontextprotocol/server-memory": "latest",
-    "@modelcontextprotocol/server-brave-search": "latest",
     "@modelcontextprotocol/server-github": "latest",
-    "@supabase/mcp-server": "latest",
-    "@context7/mcp-server": "latest",
-    "@keats/mcp-server-tavily": "latest",
+    "@brave/brave-search-mcp-server": "latest",
+    "@joshuarileydev/supabase-mcp-server": "latest",
+    "@upstash/context7-mcp": "latest",
+    "tavily-mcp": "latest",
     "chalk": "^5.3.0",
     "inquirer": "^9.2.12",
     "ora": "^6.3.1",

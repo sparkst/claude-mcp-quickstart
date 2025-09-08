@@ -7,7 +7,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 
-// Expert Mode Context - Professional multi-disciplinary approach
+// Expert Mode Context
 const EXPERT_CONTEXT = {
   dev_mode_trigger: `
 # Dev Mode Activation
@@ -36,9 +36,9 @@ Response format:
 
 ### Initialize
 Check project state via MCP:
-- Database schema
-- Recent commits
-- Existing patterns
+- Database schema (Supabase)
+- Recent commits (GitHub)
+- Documentation (Context7)
 
 ### Execute
 Choose approach based on:
@@ -48,19 +48,20 @@ Choose approach based on:
 
 ## MCP Commands
 
-### Database
+### Database (Supabase)
 - "Check schema" - Current state
-- "Analyze tables" - Find issues
-- "Migrate [change]" - Apply updates
+- "Run query" - Execute SQL
+- "Migrate" - Apply changes
 
-### Code
+### Code (GitHub)
 - "Recent commits" - Git history
 - "Create branch" - New feature
 - "Push changes" - Deploy
 
-### Documentation
-- "Search [library]" - Context7 docs
+### Docs (Context7)
+- "Search [library]" - Official docs
 - "Best practices" - Pattern lookup
+- "API reference" - Method details
 
 ## Decision Framework
 
@@ -136,10 +137,10 @@ async function setupQuickstart() {
           { name: 'Filesystem (Required)', value: 'filesystem', checked: true, disabled: true },
           { name: 'Memory (Required)', value: 'memory', checked: true, disabled: true },
           { name: 'GitHub', value: 'github', checked: true },
-          { name: 'Supabase', value: 'supabase', checked: true },
+          { name: 'Supabase Database', value: 'supabase', checked: true },
           { name: 'Context7 Docs', value: 'context7', checked: true },
-          { name: 'Web Search (Brave)', value: 'brave', checked: false },
-          { name: 'AI Search (Tavily)', value: 'tavily', checked: false }
+          { name: 'Brave Search', value: 'brave', checked: false },
+          { name: 'Tavily AI Search', value: 'tavily', checked: false }
         ]
       }
     ]);
@@ -180,74 +181,96 @@ async function setupQuickstart() {
     
     // Add Supabase if selected
     if (features.includes('supabase')) {
-      const { supabaseUrl, supabaseKey } = await inquirer.prompt([
-        {
-          type: 'input',
-          name: 'supabaseUrl',
-          message: 'Supabase URL (or press Enter to skip):',
-          default: process.env.SUPABASE_URL || ''
-        },
+      const { supabaseKey } = await inquirer.prompt([
         {
           type: 'password',
           name: 'supabaseKey',
-          message: 'Supabase Anon Key (or press Enter to skip):',
-          default: process.env.SUPABASE_ANON_KEY || '',
-          when: (answers) => answers.supabaseUrl
+          message: 'Supabase API Key (service role or anon):',
+          default: process.env.SUPABASE_API_KEY || ''
         }
       ]);
       
-      if (supabaseUrl && supabaseKey) {
+      if (supabaseKey) {
         servers.supabase = {
           command: "npx",
-          args: ["-y", "@supabase/mcp-server"],
-          env: {
-            SUPABASE_URL: supabaseUrl,
-            SUPABASE_ANON_KEY: supabaseKey
-          }
+          args: ["-y", "@joshuarileydev/supabase-mcp-server"],
+          env: { SUPABASE_API_KEY: supabaseKey }
         };
       }
     }
     
     // Add Context7 if selected
     if (features.includes('context7')) {
-      servers.context7 = {
-        command: "npx",
-        args: ["-y", "@context7/mcp-server"]
-      };
+      const { context7Setup } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'context7Setup',
+          message: 'Context7 setup method:',
+          choices: [
+            { name: 'Remote (recommended - no API key needed)', value: 'remote' },
+            { name: 'Local (requires API key)', value: 'local' },
+            { name: 'Skip', value: 'skip' }
+          ]
+        }
+      ]);
+      
+      if (context7Setup === 'local') {
+        const { apiKey } = await inquirer.prompt([
+          {
+            type: 'password',
+            name: 'apiKey',
+            message: 'Context7 API Key:'
+          }
+        ]);
+        
+        if (apiKey) {
+          servers.context7 = {
+            command: "npx",
+            args: ["-y", "@upstash/context7-mcp", "--api-key", apiKey]
+          };
+        }
+      } else if (context7Setup === 'remote') {
+        console.log(chalk.yellow('\nContext7 Remote Setup:'));
+        console.log('1. Open Claude Desktop');
+        console.log('2. Go to Settings > Connectors > Add Custom Connector');
+        console.log('3. Name: Context7');
+        console.log('4. URL: https://mcp.context7.com/mcp\n');
+      }
     }
     
-    // Add search tools if selected
+    // Add Brave if selected
     if (features.includes('brave')) {
       const { braveKey } = await inquirer.prompt([
         {
           type: 'password',
           name: 'braveKey',
-          message: 'Brave Search API Key (or press Enter to skip):'
+          message: 'Brave Search API Key:'
         }
       ]);
       
       if (braveKey) {
         servers['brave-search'] = {
           command: "npx",
-          args: ["-y", "@modelcontextprotocol/server-brave-search"],
+          args: ["-y", "@brave/brave-search-mcp-server"],
           env: { BRAVE_API_KEY: braveKey }
         };
       }
     }
     
+    // Add Tavily if selected
     if (features.includes('tavily')) {
       const { tavilyKey } = await inquirer.prompt([
         {
           type: 'password',
           name: 'tavilyKey',
-          message: 'Tavily API Key (or press Enter to skip):'
+          message: 'Tavily API Key:'
         }
       ]);
       
       if (tavilyKey) {
         servers['tavily-search'] = {
           command: "npx",
-          args: ["-y", "@keats/mcp-server-tavily"],
+          args: ["-y", "tavily-mcp"],
           env: { TAVILY_API_KEY: tavilyKey }
         };
       }
@@ -307,6 +330,14 @@ ${EXPERT_CONTEXT.expert_principles}
 - "Check setup" - Verify configuration
 - "Ship it" - Deploy checklist
 - "Analyze" - Deep investigation
+
+## MCP Servers Configured
+- Filesystem: Local file operations
+- Memory: Knowledge persistence
+- GitHub: Code management
+- Supabase: Database operations
+- Context7: Documentation search
+- Brave/Tavily: Web search
 
 ## Workspace: ${workspacePath}
 `
