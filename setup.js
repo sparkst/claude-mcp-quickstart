@@ -300,67 +300,94 @@ async function setupQuickstart() {
     await fs.writeFile(configPath, JSON.stringify(config, null, 2));
     spinner.succeed("MCP servers configured");
 
-    // Setup workspace
-    const { setupWorkspace } = await inquirer.prompt([
+    // Setup workspace with Lovable support
+    const workspaceQuestions = await inquirer.prompt([
       {
         type: "confirm",
         name: "setupWorkspace",
-        message: "Setup expert mode context?",
+        message: "Setup Lovable development workspace?",
         default: true,
+      },
+      {
+        type: "list",
+        name: "projectType",
+        message: "What type of project are you building?",
+        choices: [
+          { name: "Lovable.dev full-stack app", value: "lovable" },
+          { name: "API/Backend project", value: "api" },
+          { name: "Learning/Experimentation", value: "learning" },
+          { name: "Minimal setup", value: "minimal" },
+        ],
+        default: "lovable",
+        when: (answers) => answers.setupWorkspace,
+      },
+      {
+        type: "confirm",
+        name: "enableAssistant",
+        message: "Enable AI assistant personality? (Recommended)",
+        default: true,
+        when: (answers) => answers.setupWorkspace,
       },
     ]);
 
-    if (setupWorkspace) {
-      const contextSpinner = ora("Setting up workspace...").start();
+    if (workspaceQuestions.setupWorkspace) {
+      const { projectType, enableAssistant } = workspaceQuestions;
+      const contextSpinner = ora("Setting up Lovable workspace...").start();
 
       const workspacePath = path.join(os.homedir(), "claude-mcp-workspace");
       await fs.mkdir(workspacePath, { recursive: true });
 
-      // Create context files
-      await fs.writeFile(
-        path.join(workspacePath, "DEV_MODE.md"),
-        EXPERT_CONTEXT.dev_mode_trigger,
-      );
+      // Create enhanced workspace structure
+      const directories = [
+        "lovable-framework",
+        "skippy-context", 
+        "project-templates",
+        "active-projects",
+        "usage-guides"
+      ];
 
-      await fs.writeFile(
-        path.join(workspacePath, "BOOTSTRAP_LOVABLE.md"),
-        EXPERT_CONTEXT.bootstrap_lovable,
-      );
+      for (const dir of directories) {
+        await fs.mkdir(path.join(workspacePath, dir), { recursive: true });
+      }
 
-      await fs.writeFile(
-        path.join(workspacePath, "PRINCIPLES.md"),
-        EXPERT_CONTEXT.expert_principles,
-      );
+      contextSpinner.text = "Copying Bootstrap Lovable v2 framework...";
+      
+      // Copy entire bootstrap-lovable-v2 directory to workspace
+      const bootstrapSource = path.join(process.cwd(), "bootstrap-lovable-v2");
+      const bootstrapDest = path.join(workspacePath, "lovable-framework");
+      
+      try {
+        // Copy all bootstrap-lovable-v2 files recursively
+        await copyDirectory(bootstrapSource, bootstrapDest);
+      } catch (error) {
+        console.warn(chalk.yellow("Bootstrap Lovable v2 not found in current directory - creating basic structure"));
+      }
 
-      // Create master context
-      await fs.writeFile(
-        path.join(workspacePath, "CONTEXT.md"),
-        `# Expert Mode Context
+      contextSpinner.text = "Creating AI assistant context files...";
 
-${EXPERT_CONTEXT.dev_mode_trigger}
-${EXPERT_CONTEXT.bootstrap_lovable}
-${EXPERT_CONTEXT.expert_principles}
+      if (enableAssistant) {
+        // Create AI activation file
+        await createAIActivation(workspacePath);
+        await createLovablePatterns(workspacePath);
+        await createPromptLibrary(workspacePath);
+      } else {
+        // Create basic dev mode
+        await fs.writeFile(
+          path.join(workspacePath, "DEV_MODE.md"),
+          EXPERT_CONTEXT.dev_mode_trigger,
+        );
+      }
 
-## Quick Commands
+      contextSpinner.text = "Creating project templates...";
+      await createProjectTemplates(workspacePath, projectType);
 
-- "Dev Mode" - Activate expert mode
-- "Check setup" - Verify configuration
-- "Ship it" - Deploy checklist
-- "Analyze" - Deep investigation
+      contextSpinner.text = "Creating usage guides...";
+      await createUsageGuides(workspacePath, projectType, enableAssistant);
 
-## MCP Servers Configured
-- Filesystem: Local file operations
-- Memory: Knowledge persistence
-- GitHub: Code management
-- Supabase: Database operations
-- Context7: Documentation search
-- Brave/Tavily: Web search
+      // Create master context based on project type
+      await createMasterContext(workspacePath, projectType, enableAssistant);
 
-## Workspace: ${workspacePath}
-`,
-      );
-
-      contextSpinner.succeed("Workspace configured");
+      contextSpinner.succeed(`${projectType === 'lovable' ? 'Lovable' : 'Development'} workspace configured with ${enableAssistant ? 'AI assistant' : 'basic mode'}`);
     }
 
     console.log(chalk.green("\n✅ Setup complete!\n"));
@@ -375,7 +402,162 @@ ${EXPERT_CONTEXT.expert_principles}
   }
 }
 
-// Testable utilities
+// Workspace creation helpers
+async function copyDirectory(src, dest) {
+  try {
+    await fs.access(src);
+    const entries = await fs.readdir(src, { withFileTypes: true });
+    
+    await fs.mkdir(dest, { recursive: true });
+    
+    for (const entry of entries) {
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+      
+      if (entry.isDirectory()) {
+        await copyDirectory(srcPath, destPath);
+      } else {
+        await fs.copyFile(srcPath, destPath);
+      }
+    }
+  } catch (error) {
+    throw new Error(`Failed to copy directory: ${error.message}`);
+  }
+}
+
+async function readTemplate(templateName) {
+  const templatePath = path.join(process.cwd(), "templates", templateName);
+  
+  try {
+    await fs.access(templatePath);
+    return await fs.readFile(templatePath, "utf8");
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      throw new Error(`Template file missing: ${templatePath}. Please ensure templates directory is present.`);
+    }
+    throw new Error(`Failed to read template ${templateName}: ${error.message}`);
+  }
+}
+
+async function createAIActivation(workspacePath) {
+  await fs.mkdir(path.join(workspacePath, "ai-context"), { recursive: true });
+  const template = await readTemplate("ai-activation.md");
+  await fs.writeFile(
+    path.join(workspacePath, "ai-context", "AI_ACTIVATION.md"),
+    template
+  );
+}
+
+async function createLovablePatterns(workspacePath) {
+  const template = await readTemplate("lovable-patterns.md");
+  await fs.writeFile(
+    path.join(workspacePath, "ai-context", "LOVABLE_PATTERNS.md"),
+    template
+  );
+}
+
+
+async function createPromptLibrary(workspacePath) {
+  const template = await readTemplate("prompt-library.md");
+  await fs.writeFile(
+    path.join(workspacePath, "ai-context", "PROMPT_LIBRARY.md"),
+    template
+  );
+}
+
+async function createProjectTemplates(workspacePath, projectType) {
+  await fs.mkdir(path.join(workspacePath, "project-templates"), { recursive: true });
+  
+  const template = await readTemplate(`project-templates/${projectType}-template.md`);
+  await fs.writeFile(
+    path.join(workspacePath, "project-templates", `${projectType}-template.md`),
+    template
+  );
+}
+
+async function createUsageGuides(workspacePath, projectType, enableAssistant) {
+  const template = await readTemplate("usage-guide.md");
+  await fs.writeFile(
+    path.join(workspacePath, "USAGE_GUIDE.md"),
+    template
+  );
+}
+
+async function createMasterContext(workspacePath, projectType, enableAssistant) {
+  const contextContent = enableAssistant ? 
+    `# AI Assistant Lovable Development Context
+
+## 🎯 Development Environment
+- **AI Personality**: Expert Assistant (Brilliant + Supportive)
+- **Platform**: Lovable.dev (React + Tailwind + Supabase)
+- **Project Type**: ${projectType === 'lovable' ? 'Full-Stack Application' : 'Custom Development'}
+- **MCP Integration**: Full access to Supabase, GitHub, Context7, Tavily
+
+Type **"Dev Mode"** followed by your request.
+
+## 🚀 Quick Commands
+
+### Analysis Commands:
+- "Analyze my Lovable app"
+- "Review my Supabase schema"  
+- "Check my component architecture"
+
+### Development Commands:
+- "Dev Mode: create [feature] with Lovable patterns"
+- "Dev Mode: optimize performance"
+- "Dev Mode: add [specific functionality]"
+
+### Performance Commands:
+- "Optimize my database queries"
+- "Review my bundle size"
+
+AI assistant automatically:
+1. **Loads Development Context**: Project structure, database schema, recent commits
+2. **Activates MCP Tools**: Full Supabase + GitHub + documentation access
+3. **Applies Lovable Patterns**: Proven architectural approaches
+4. **Provides Expert Guidance**: Technical solutions with clear explanations
+
+## 📁 Workspace Structure
+
+\`\`\`
+claude-mcp-workspace/
+├── ai-context/           # AI assistant activation & patterns
+├── project-templates/    # Project-specific commands
+├── USAGE_GUIDE.md       # Complete development guide
+└── CONTEXT.md           # This file
+\`\`\`
+
+## 🎮 AI Assistant Modes
+
+**Research Mode**: Deep analysis and recommendations
+**Development Mode**: Feature implementation with patterns  
+**Optimization Mode**: Performance and architecture improvements
+**Learning Mode**: Teaching concepts and best practices
+
+**AI Promise**: *"I'll make your Lovable development journey brilliant, efficient, and genuinely fun. We're going to build something incredible together!"* 🚀` 
+    : `# Basic Development Context
+
+## 🎯 Development Setup
+- **Platform**: ${projectType === 'lovable' ? 'Lovable.dev' : 'Standard Development'}
+- **MCP Integration**: Basic access to development tools
+
+## 📁 Workspace Structure
+
+\`\`\`
+claude-mcp-workspace/
+├── project-templates/    # Basic templates
+├── USAGE_GUIDE.md       # Development guide
+└── CONTEXT.md           # This file
+\`\`\`
+
+Ready for development assistance.`;
+
+  await fs.writeFile(
+    path.join(workspacePath, "CONTEXT.md"),
+    contextContent
+  );
+}
+
 export function generateServerConfig(serverType, options = {}) {
   const {
     workspacePath,
