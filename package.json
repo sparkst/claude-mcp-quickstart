@@ -1,6 +1,6 @@
 {
   "name": "claude-mcp-quickstart",
-  "version": "2.2.7",
+  "version": "2.2.8",
   "description": "MCP Quickstart with expert multi-disciplinary AI assistance",
   "main": "index.js",
   "type": "module",
