@@ -10,6 +10,18 @@ After installing this MCP quickstart, you have access to:
 - **AI Assistant**: Your development co-pilot with personality
 - **Context7 + Tavily**: Smart documentation and web search routing
 
+### Getting Your Supabase Access Token
+
+To enable full Supabase integration, you'll need an access token:
+
+1. **Visit**: [https://supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens)
+2. **Create New Token**: Click "Generate new token"
+3. **Name**: Give it a name like "Claude MCP Access"
+4. **Permissions**: Select the projects you want Claude to access
+5. **Copy Token**: Save it securely - you'll need it during setup
+
+**Note**: This is different from your project API keys. Access tokens let Claude see all your projects and their schemas.
+
 **Quick Test Commands:**
 ```
 Show me what you can do

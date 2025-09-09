@@ -15,6 +15,8 @@
 Analyze my Lovable app
 What's in my Supabase database?
 Review my project structure
+Show me my Supabase projects
+List my database tables
 ```
 
 ### Development Tasks

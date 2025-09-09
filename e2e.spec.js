@@ -179,23 +179,26 @@ describe("end-to-end setup workflow", () => {
         expectedEnv: { GITHUB_TOKEN: "test-token-123" },
       },
       {
-        type: "supabase",
-        options: { supabaseKey: "sb-test-key" },
-        expectedEnv: { SUPABASE_API_KEY: "sb-test-key" },
-      },
-      {
         type: "brave",
         options: { braveKey: "brave-key" },
         expectedEnv: { BRAVE_API_KEY: "brave-key" },
       },
     ];
 
+    // Test configs that use environment variables
     for (const { type, options, expectedEnv } of testConfigs) {
       const config = generateServerConfig(type, options);
       expect(config).toBeDefined();
       expect(config.env).toEqual(expectedEnv);
       expect(config.command).toBe("npx");
     }
+
+    // Test Supabase config separately (uses command line args, not env vars)
+    const supabaseConfig = generateServerConfig("supabase", { supabaseKey: "sb-test-key" });
+    expect(supabaseConfig).toBeDefined();
+    expect(supabaseConfig.command).toBe("npx");
+    expect(supabaseConfig.args).toContain("--access-token=sb-test-key");
+    expect(supabaseConfig.env).toBeUndefined();
   });
 
   test("handles missing API keys gracefully", () => {

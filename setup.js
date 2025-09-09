@@ -195,20 +195,19 @@ async function setupQuickstart() {
 
     // Add Supabase if selected
     if (features.includes("supabase")) {
-      const { supabaseKey } = await inquirer.prompt([
+      const { supabaseAccessToken } = await inquirer.prompt([
         {
           type: "password",
-          name: "supabaseKey",
-          message: "Supabase API Key (service role or anon):",
-          default: process.env.SUPABASE_API_KEY || "",
+          name: "supabaseAccessToken",
+          message: "Supabase Access Token (from https://supabase.com/dashboard/account/tokens):",
+          default: process.env.SUPABASE_ACCESS_TOKEN || "",
         },
       ]);
 
-      if (supabaseKey) {
+      if (supabaseAccessToken) {
         servers.supabase = {
           command: "npx",
-          args: ["-y", "@joshuarileydev/supabase-mcp-server"],
-          env: { SUPABASE_API_KEY: supabaseKey },
+          args: ["-y", "@supabase/mcp-server-supabase", `--access-token=${supabaseAccessToken}`],
         };
       }
     }
@@ -591,8 +590,7 @@ export function generateServerConfig(serverType, options = {}) {
     supabase: supabaseKey
       ? {
           command: "npx",
-          args: ["-y", "@joshuarileydev/supabase-mcp-server"],
-          env: { SUPABASE_API_KEY: supabaseKey },
+          args: ["-y", "@supabase/mcp-server-supabase", `--access-token=${supabaseKey}`],
         }
       : null,
     context7: context7ApiKey

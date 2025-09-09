@@ -52,13 +52,12 @@ describe("generateServerConfig", () => {
     expect(config).toBeNull();
   });
 
-  test("creates supabase server config with API key", () => {
+  test("creates supabase server config with access token", () => {
     const supabaseKey = "sb-test-key";
     const config = generateServerConfig("supabase", { supabaseKey });
     expect(config).toEqual({
       command: "npx",
-      args: ["-y", "@joshuarileydev/supabase-mcp-server"],
-      env: { SUPABASE_API_KEY: supabaseKey },
+      args: ["-y", "@supabase/mcp-server-supabase", "--access-token=sb-test-key"],
     });
   });
 
