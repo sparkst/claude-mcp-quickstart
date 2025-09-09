@@ -28,7 +28,12 @@ console.log(
 program
   .name("claude-mcp-quickstart")
   .description("MCP configuration with expert multi-disciplinary assistance")
-  .version("2.0.0");
+  .version("2.0.0")
+  .action(async () => {
+    // Default action when no command is specified
+    console.log(chalk.cyan("🚀 Running setup (use --help to see all commands)\n"));
+    await setupQuickstart();
+  });
 
 program
   .command("setup")

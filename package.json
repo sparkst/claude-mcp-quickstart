@@ -7,6 +7,12 @@
   "bin": {
     "claude-mcp-quickstart": "index.js"
   },
+  "files": [
+    "index.js",
+    "setup.js",
+    "dev-mode.js",
+    "templates/"
+  ],
   "scripts": {
     "setup": "node setup.js",
     "dev-mode": "node dev-mode.js",
@@ -19,7 +25,7 @@
     "@modelcontextprotocol/server-memory": "latest",
     "@modelcontextprotocol/server-github": "latest",
     "@brave/brave-search-mcp-server": "latest",
-    "@joshuarileydev/supabase-mcp-server": "latest",
+    "@supabase/mcp-server-supabase": "latest",
     "@upstash/context7-mcp": "latest",
     "tavily-mcp": "latest",
     "chalk": "^5.3.0",
