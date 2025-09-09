@@ -1,0 +1,45 @@
+Domain: Token Security & MCP Configuration
+Purpose: Secure API token handling with masked display and validation for MCP server setup
+
+Key Concepts:
+- Token Masking: First 5 + last 3 chars visible (abcde********123)
+- Memory Clearing: JavaScript best-effort token cleanup after use  
+- UX Workflow: Enter (keep) / "-" (delete) / new value (replace)
+- Format Validation: Regex patterns for each server type
+- Atomic Operations: Safe config file writes with temp files
+
+Important Files:
+- setup.js: Core token security functions (maskToken, withSecureToken, validateToken)
+- test-utils.js: Mirror functions for testing without exposing internals
+- setup.spec.js: 47 comprehensive security tests
+
+Common Tasks:
+- "Add new MCP server": Follow pattern in setup.js around line 163-206
+- "Debug token validation": Check validateToken() patterns in setup.js:600-608  
+- "Test token security": Use test-utils.js functions in *.spec.js files
+- "Update token format": Modify regex in both setup.js and test-utils.js
+
+Gotchas:
+- Token masking requires 8+ char tokens (returns unchanged if shorter)
+- GitHub tokens have variable length suffixes (36-40 chars after prefix)
+- Supabase tokens use command-line args, not env variables
+- Memory clearing in JS is best-effort, not guaranteed
+- All token functions exist in both setup.js (private) and test-utils.js (public)
+
+Security Patterns:
+- Always use withSecureToken() for sensitive operations
+- Validate tokens before storage with validateToken()
+- Use atomic writes (temp file + rename) for config changes
+- Handle JSON parsing errors gracefully with fallbacks
+
+Test Patterns:
+- Mock fs.readFile for config loading tests
+- Use generateTestToken() for consistent test tokens  
+- Test edge cases: null, short tokens, malformed JSON
+- Verify security: memory clearing, validation failures
+
+Dependencies: 
+- inquirer for user prompts
+- chalk for colored output
+- fs/promises for file operations
+- No external token validation libraries (self-contained)

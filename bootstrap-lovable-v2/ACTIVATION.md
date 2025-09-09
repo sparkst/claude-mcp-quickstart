@@ -69,7 +69,7 @@ Handles secrets, configs, monitoring setup
 
 ## 🎯 Smart Defaults
 
-When in Dev Mode, Skippy automatically:
+When in Dev Mode, automatically:
 
 1. **Chooses optimal model routing**
    - GPT-4o-mini for simple tasks

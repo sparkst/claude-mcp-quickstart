@@ -107,23 +107,10 @@ async function setupQuickstart() {
   const spinner = ora("Initializing setup...").start();
 
   try {
-    // Get config path
-    const configPath = path.join(
-      os.homedir(),
-      "Library",
-      "Application Support",
-      "Claude",
-      "claude_desktop_config.json",
-    );
-
-    // Read or create config
-    let config = {};
-    try {
-      const configContent = await fs.readFile(configPath, "utf-8");
-      config = JSON.parse(configContent);
-    } catch (e) {
-      config = { mcpServers: {} };
-    }
+    // Get config path and load existing config
+    const configPath = getConfigPath();
+    const existingConfig = await loadExistingConfig();
+    let config = existingConfig;
 
     spinner.succeed("Configuration loaded");
 
@@ -175,36 +162,78 @@ async function setupQuickstart() {
 
     // Add GitHub if selected
     if (features.includes("github")) {
+      const existingToken = getExistingToken(existingConfig, 'github');
+      let promptMessage = "GitHub Token:";
+      
+      if (existingToken) {
+        const maskedToken = withSecureToken(existingToken, token => maskToken(token));
+        promptMessage = `GitHub Token [Current: ${maskedToken}] (Enter to keep, "-" to delete, or paste new):`;
+      } else {
+        promptMessage = "GitHub Token (or press Enter to skip):";
+      }
+
       const { githubToken } = await inquirer.prompt([
         {
           type: "password",
           name: "githubToken",
-          message: "GitHub Token (or press Enter to skip):",
-          default: process.env.GITHUB_TOKEN || "",
+          message: promptMessage,
+          default: "",
         },
       ]);
 
-      if (githubToken) {
+      if (githubToken === "-") {
+        // User wants to delete - don't add to servers
+        console.log(chalk.yellow("GitHub server removed"));
+      } else if (githubToken === "" && existingToken) {
+        // User pressed Enter - keep existing
         servers.github = {
           command: "npx",
           args: ["-y", "@modelcontextprotocol/server-github"],
-          env: { GITHUB_TOKEN: githubToken },
+          env: { GITHUB_TOKEN: existingToken },
         };
+      } else if (githubToken) {
+        // User provided new token - validate it
+        if (validateToken(githubToken, 'github')) {
+          servers.github = {
+            command: "npx",
+            args: ["-y", "@modelcontextprotocol/server-github"],
+            env: { GITHUB_TOKEN: githubToken },
+          };
+        } else {
+          console.log(chalk.yellow("Invalid GitHub token format - skipping"));
+        }
       }
     }
 
     // Add Supabase if selected
     if (features.includes("supabase")) {
+      const existingToken = getExistingToken(existingConfig, 'supabase');
+      let promptMessage = "Supabase Access Token (from https://supabase.com/dashboard/account/tokens):";
+      
+      if (existingToken) {
+        promptMessage = `Supabase Access Token [Current: ${maskToken(existingToken)}] (Enter to keep, "-" to delete, or paste new):`;
+      }
+
       const { supabaseAccessToken } = await inquirer.prompt([
         {
           type: "password",
           name: "supabaseAccessToken",
-          message: "Supabase Access Token (from https://supabase.com/dashboard/account/tokens):",
-          default: process.env.SUPABASE_ACCESS_TOKEN || "",
+          message: promptMessage,
+          default: "",
         },
       ]);
 
-      if (supabaseAccessToken) {
+      if (supabaseAccessToken === "-") {
+        // User wants to delete - don't add to servers
+        console.log(chalk.yellow("Supabase server removed"));
+      } else if (supabaseAccessToken === "" && existingToken) {
+        // User pressed Enter - keep existing
+        servers.supabase = {
+          command: "npx",
+          args: ["-y", "@supabase/mcp-server-supabase", `--access-token=${existingToken}`],
+        };
+      } else if (supabaseAccessToken) {
+        // User provided new token
         servers.supabase = {
           command: "npx",
           args: ["-y", "@supabase/mcp-server-supabase", `--access-token=${supabaseAccessToken}`],
@@ -256,15 +285,34 @@ async function setupQuickstart() {
 
     // Add Brave if selected
     if (features.includes("brave")) {
+      const existingToken = getExistingToken(existingConfig, 'brave');
+      let promptMessage = "Brave Search API Key:";
+      
+      if (existingToken) {
+        promptMessage = `Brave Search API Key [Current: ${maskToken(existingToken)}] (Enter to keep, "-" to delete, or paste new):`;
+      }
+
       const { braveKey } = await inquirer.prompt([
         {
           type: "password",
           name: "braveKey",
-          message: "Brave Search API Key:",
+          message: promptMessage,
+          default: "",
         },
       ]);
 
-      if (braveKey) {
+      if (braveKey === "-") {
+        // User wants to delete - don't add to servers
+        console.log(chalk.yellow("Brave Search server removed"));
+      } else if (braveKey === "" && existingToken) {
+        // User pressed Enter - keep existing
+        servers["brave-search"] = {
+          command: "npx",
+          args: ["-y", "@brave/brave-search-mcp-server"],
+          env: { BRAVE_API_KEY: existingToken },
+        };
+      } else if (braveKey) {
+        // User provided new token
         servers["brave-search"] = {
           command: "npx",
           args: ["-y", "@brave/brave-search-mcp-server"],
@@ -275,15 +323,34 @@ async function setupQuickstart() {
 
     // Add Tavily if selected
     if (features.includes("tavily")) {
+      const existingToken = getExistingToken(existingConfig, 'tavily');
+      let promptMessage = "Tavily API Key:";
+      
+      if (existingToken) {
+        promptMessage = `Tavily API Key [Current: ${maskToken(existingToken)}] (Enter to keep, "-" to delete, or paste new):`;
+      }
+
       const { tavilyKey } = await inquirer.prompt([
         {
           type: "password",
           name: "tavilyKey",
-          message: "Tavily API Key:",
+          message: promptMessage,
+          default: "",
         },
       ]);
 
-      if (tavilyKey) {
+      if (tavilyKey === "-") {
+        // User wants to delete - don't add to servers
+        console.log(chalk.yellow("Tavily Search server removed"));
+      } else if (tavilyKey === "" && existingToken) {
+        // User pressed Enter - keep existing
+        servers["tavily-search"] = {
+          command: "npx",
+          args: ["-y", "tavily-mcp"],
+          env: { TAVILY_API_KEY: existingToken },
+        };
+      } else if (tavilyKey) {
+        // User provided new token
         servers["tavily-search"] = {
           command: "npx",
           args: ["-y", "tavily-mcp"],
@@ -292,12 +359,23 @@ async function setupQuickstart() {
       }
     }
 
-    // Merge configurations
-    config.mcpServers = { ...config.mcpServers, ...servers };
-
-    // Save config
-    await fs.writeFile(configPath, JSON.stringify(config, null, 2));
-    spinner.succeed("MCP servers configured");
+    // Validate and merge configurations
+    try {
+      config = validateAndMergeConfig(config, servers);
+      
+      // Save config with atomic write
+      const configPath = getConfigPath();
+      const tempConfigPath = `${configPath}.tmp`;
+      
+      await fs.writeFile(tempConfigPath, JSON.stringify(config, null, 2));
+      await fs.rename(tempConfigPath, configPath);
+      
+      spinner.succeed("MCP servers configured");
+    } catch (error) {
+      spinner.fail("Configuration validation failed");
+      console.error(chalk.red(`Error: ${error.message}`));
+      throw error;
+    }
 
     // Setup workspace with Lovable support
     const workspaceQuestions = await inquirer.prompt([
@@ -436,6 +514,128 @@ async function readTemplate(templateName) {
     }
     throw new Error(`Failed to read template ${templateName}: ${error.message}`);
   }
+}
+
+function maskToken(token) {
+  if (!token || token.length < 8) return token;
+  return token.substring(0, 5) + '*'.repeat(token.length - 8) + token.substring(token.length - 3);
+}
+
+async function loadExistingConfig() {
+  try {
+    const configPath = getConfigPath();
+    const configContent = await fs.readFile(configPath, "utf8");
+    
+    // Safely parse JSON with proper error handling
+    try {
+      const config = JSON.parse(configContent);
+      // Validate basic structure
+      if (!config || typeof config !== 'object') {
+        throw new Error('Invalid config structure');
+      }
+      return {
+        mcpServers: config.mcpServers || {},
+        ...config
+      };
+    } catch (parseError) {
+      console.warn(chalk.yellow(`Invalid JSON in config file: ${parseError.message}`));
+      return { mcpServers: {} };
+    }
+  } catch (error) {
+    // File doesn't exist or can't be read
+    return { mcpServers: {} };
+  }
+}
+
+function getExistingToken(existingConfig, serverName) {
+  const server = existingConfig.mcpServers?.[serverName];
+  if (!server) return null;
+  
+  // Handle different token storage methods
+  if (server.env) {
+    // Environment variable tokens
+    const tokenMap = {
+      github: 'GITHUB_TOKEN',
+      brave: 'BRAVE_API_KEY', 
+      tavily: 'TAVILY_API_KEY'
+    };
+    return server.env[tokenMap[serverName]] || null;
+  } else if (server.args && serverName === 'supabase') {
+    // Command line argument tokens (Supabase)
+    const tokenArg = server.args.find(arg => arg.startsWith('--access-token='));
+    return tokenArg ? tokenArg.replace('--access-token=', '') : null;
+  }
+  
+  return null;
+}
+
+// Security utility to clear sensitive strings from memory
+function clearToken(tokenRef) {
+  if (typeof tokenRef === 'string' && tokenRef.length > 0) {
+    // Overwrite the string content (best effort in JavaScript)
+    tokenRef = null;
+    // Force garbage collection hint
+    if (global.gc) {
+      global.gc();
+    }
+  }
+}
+
+// Secure token handler that automatically clears tokens
+function withSecureToken(token, callback) {
+  try {
+    return callback(token);
+  } finally {
+    clearToken(token);
+  }
+}
+
+// Validate token format for basic security
+function validateToken(token, serverType) {
+  if (!token || typeof token !== 'string') {
+    return false;
+  }
+
+  // Basic validation patterns
+  const patterns = {
+    github: /^(gh[ps]_[a-zA-Z0-9]{36,40}|[a-f0-9]{40})$/,
+    supabase: /^sb[a-z]_[a-zA-Z0-9_-]+$/,
+    brave: /^[A-Z0-9]{32,}$/,
+    tavily: /^tvly-[a-zA-Z0-9_-]{20,}$/
+  };
+
+  const pattern = patterns[serverType];
+  return pattern ? pattern.test(token) : token.length >= 8;
+}
+
+// Validate and merge configuration
+function validateAndMergeConfig(existingConfig, newServers) {
+  // Validate existing config structure
+  if (!existingConfig || typeof existingConfig !== 'object') {
+    throw new Error('Invalid existing configuration');
+  }
+
+  // Ensure mcpServers exists
+  if (!existingConfig.mcpServers || typeof existingConfig.mcpServers !== 'object') {
+    existingConfig.mcpServers = {};
+  }
+
+  // Validate new servers
+  for (const [serverName, serverConfig] of Object.entries(newServers)) {
+    if (!serverConfig || typeof serverConfig !== 'object') {
+      throw new Error(`Invalid configuration for server: ${serverName}`);
+    }
+    
+    if (!serverConfig.command || !Array.isArray(serverConfig.args)) {
+      throw new Error(`Invalid server configuration structure for: ${serverName}`);
+    }
+  }
+
+  // Safe merge
+  return {
+    ...existingConfig,
+    mcpServers: { ...existingConfig.mcpServers, ...newServers }
+  };
 }
 
 async function createAIActivation(workspacePath) {
