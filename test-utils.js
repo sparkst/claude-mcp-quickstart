@@ -39,21 +39,47 @@ export async function loadExistingConfig() {
 
 export function getExistingToken(existingConfig, serverName) {
   const server = existingConfig.mcpServers?.[serverName];
-  if (!server) return null;
+  if (!server) {
+    // Also check alternative server names for backward compatibility
+    const alternativeNames = {
+      'brave': 'brave-search',  // Check brave-search if brave not found
+      'tavily': 'tavily-search' // Check tavily-search if tavily not found
+    };
+    const altName = alternativeNames[serverName];
+    if (altName) {
+      const altServer = existingConfig.mcpServers?.[altName];
+      if (altServer) {
+        return getExistingToken(existingConfig, altName);
+      }
+    }
+    return null;
+  }
   
   // Handle different token storage methods
   if (server.env) {
-    // Environment variable tokens
-    const tokenMap = {
-      github: 'GITHUB_TOKEN',
-      brave: 'BRAVE_API_KEY', 
-      tavily: 'TAVILY_API_KEY'
+    // Environment variable tokens - check multiple possible keys
+    const tokenKeys = {
+      github: ['GITHUB_TOKEN', 'GITHUB_PERSONAL_ACCESS_TOKEN'],
+      'brave-search': ['BRAVE_API_KEY'],
+      brave: ['BRAVE_API_KEY'],
+      'tavily-search': ['TAVILY_API_KEY'],
+      tavily: ['TAVILY_API_KEY']
     };
-    return server.env[tokenMap[serverName]] || null;
-  } else if (server.args && serverName === 'supabase') {
+    
+    const possibleKeys = tokenKeys[serverName] || [];
+    for (const key of possibleKeys) {
+      if (server.env[key]) {
+        return server.env[key];
+      }
+    }
+  } else if (server.args && (serverName === 'supabase' || serverName.includes('supabase'))) {
     // Command line argument tokens (Supabase)
     const tokenArg = server.args.find(arg => arg.startsWith('--access-token='));
-    return tokenArg ? tokenArg.replace('--access-token=', '') : null;
+    if (tokenArg) {
+      const token = tokenArg.replace('--access-token=', '');
+      // Clean up malformed tokens (trailing quotes, empty values)
+      return token && token !== '"' && token !== '""' && token.trim() ? token.replace(/^["']|["']$/g, '') : null;
+    }
   }
   
   return null;

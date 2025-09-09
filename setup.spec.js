@@ -335,6 +335,76 @@ describe("getExistingToken", () => {
     const token = getExistingToken(config, "unknown");
     expect(token).toBeNull();
   });
+
+  test("finds GitHub token with GITHUB_PERSONAL_ACCESS_TOKEN key", () => {
+    const config = {
+      mcpServers: {
+        github: {
+          command: "npx",
+          env: { GITHUB_PERSONAL_ACCESS_TOKEN: "ghp_personal123456789" }
+        }
+      }
+    };
+
+    const token = getExistingToken(config, "github");
+    expect(token).toBe("ghp_personal123456789");
+  });
+
+  test("handles backward compatibility with brave-search server name", () => {
+    const config = {
+      mcpServers: {
+        "brave-search": {
+          command: "npx",
+          env: { BRAVE_API_KEY: "brave_compat_key" }
+        }
+      }
+    };
+
+    const token = getExistingToken(config, "brave");
+    expect(token).toBe("brave_compat_key");
+  });
+
+  test("handles backward compatibility with tavily-search server name", () => {
+    const config = {
+      mcpServers: {
+        "tavily-search": {
+          command: "npx",
+          env: { TAVILY_API_KEY: "tavily_compat_key" }
+        }
+      }
+    };
+
+    const token = getExistingToken(config, "tavily");
+    expect(token).toBe("tavily_compat_key");
+  });
+
+  test("cleans up malformed Supabase tokens", () => {
+    const config = {
+      mcpServers: {
+        supabase: {
+          command: "npx",
+          args: ["-y", "@supabase/mcp-server-supabase", '--access-token="malformed_token"']
+        }
+      }
+    };
+
+    const token = getExistingToken(config, "supabase");
+    expect(token).toBe("malformed_token");
+  });
+
+  test("returns null for empty Supabase tokens", () => {
+    const config = {
+      mcpServers: {
+        supabase: {
+          command: "npx",
+          args: ["-y", "@supabase/mcp-server-supabase", '--access-token="']
+        }
+      }
+    };
+
+    const token = getExistingToken(config, "supabase");
+    expect(token).toBeNull();
+  });
 });
 
 describe("validateToken", () => {
