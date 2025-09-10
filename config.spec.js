@@ -1,8 +1,4 @@
 import { describe, test, expect } from "vitest";
-import fs from "fs/promises";
-import path from "path";
-import os from "os";
-import { tmpdir } from "tmp-promise";
 
 // Config validation utilities
 function validateMcpConfig(config) {

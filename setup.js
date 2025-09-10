@@ -127,18 +127,11 @@ async function setupQuickstart() {
         message: "Select MCP servers to configure:",
         choices: [
           {
-            name: "Filesystem (Required)",
-            value: "filesystem",
-            checked: true,
-            disabled: true,
-          },
-          {
             name: "Memory (Required)",
             value: "memory",
             checked: true,
             disabled: true,
           },
-          { name: "GitHub", value: "github", checked: true },
           { name: "Supabase Database", value: "supabase", checked: true },
           { name: "Context7 Docs", value: "context7", checked: true },
           { name: "Brave Search", value: "brave", checked: false },
@@ -150,65 +143,12 @@ async function setupQuickstart() {
     // Configure servers
     const servers = {};
 
-    // Always add filesystem and memory
-    servers.filesystem = {
-      command: "npx",
-      args: [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        path.join(os.homedir(), "claude-mcp-workspace"),
-      ],
-    };
+    // Always add memory
 
     servers.memory = {
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-memory"],
     };
-
-    // Add GitHub if selected
-    if (features.includes("github")) {
-      const existingToken = getExistingToken(existingConfig, "github");
-      let promptMessage = "GitHub Token:";
-
-      if (existingToken) {
-        const maskedToken = maskToken(existingToken);
-        promptMessage = `GitHub Token [Current: ${maskedToken}] (Enter to keep, "-" to delete, or paste new):`;
-      } else {
-        promptMessage = "GitHub Token (or press Enter to skip):";
-      }
-
-      const { githubToken } = await inquirer.prompt([
-        {
-          type: "password",
-          name: "githubToken",
-          message: promptMessage,
-          default: "",
-        },
-      ]);
-
-      if (githubToken === "-") {
-        // User wants to delete - don't add to servers
-        console.log(chalk.yellow("GitHub server removed"));
-      } else if (githubToken === "" && existingToken) {
-        // User pressed Enter - keep existing
-        servers.github = {
-          command: "npx",
-          args: ["-y", "@modelcontextprotocol/server-github"],
-          env: { GITHUB_TOKEN: existingToken },
-        };
-      } else if (githubToken) {
-        // User provided new token - validate it
-        if (validateToken(githubToken, "github")) {
-          servers.github = {
-            command: "npx",
-            args: ["-y", "@modelcontextprotocol/server-github"],
-            env: { GITHUB_TOKEN: githubToken },
-          };
-        } else {
-          console.log(chalk.yellow("Invalid GitHub token format - skipping"));
-        }
-      }
-    }
 
     // Add Supabase if selected
     if (features.includes("supabase")) {
@@ -600,7 +540,6 @@ function getExistingToken(existingConfig, serverName) {
   if (server.env) {
     // Environment variable tokens - check multiple possible keys
     const tokenKeys = {
-      github: ["GITHUB_TOKEN", "GITHUB_PERSONAL_ACCESS_TOKEN"],
       "brave-search": ["BRAVE_API_KEY"],
       brave: ["BRAVE_API_KEY"],
       "tavily-search": ["TAVILY_API_KEY"],
@@ -662,7 +601,6 @@ function validateToken(token, serverType) {
 
   // Basic validation patterns
   const patterns = {
-    github: /^(gh[ps]_[a-zA-Z0-9]{36,40}|[a-f0-9]{40})$/,
     supabase: /^sb[a-z]_[a-zA-Z0-9_-]+$/,
     brave: /^[A-Z0-9]{32,}$/,
     tavily: /^tvly-[a-zA-Z0-9_-]{20,}$/,

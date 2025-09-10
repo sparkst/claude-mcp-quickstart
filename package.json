@@ -13,7 +13,9 @@
     "dev-mode.js",
     "templates/",
     "bootstrap-lovable-v2/",
-    "test-utils.js"
+    "test-utils.js",
+    "CHANGELOG.md",
+    "MIGRATION.md"
   ],
   "scripts": {
     "setup": "node setup.js",
@@ -28,8 +30,6 @@
   },
   "dependencies": {
     "@brave/brave-search-mcp-server": "latest",
-    "@modelcontextprotocol/server-filesystem": "latest",
-    "@modelcontextprotocol/server-github": "latest",
     "@modelcontextprotocol/server-memory": "latest",
     "@supabase/mcp-server-supabase": "latest",
     "@upstash/context7-mcp": "latest",

@@ -1,6 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import fs from "fs/promises";
-import path from "path";
 import { generateServerConfig } from "./setup.js";
 
 describe("error handling scenarios", () => {

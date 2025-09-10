@@ -5,132 +5,337 @@ import fs from "fs/promises";
 import path from "path";
 import os from "os";
 
-const DEV_MODE_ACTIVE = `
-# DEV MODE ACTIVE
+async function getConfigPath() {
+  const platform = os.platform();
+  const homedir = os.homedir();
 
-Expert multi-disciplinary mode engaged.
+  switch (platform) {
+    case "win32":
+      return path.join(
+        homedir,
+        "AppData",
+        "Roaming",
+        "Claude",
+        "claude_desktop_config.json"
+      );
+    case "darwin":
+      return path.join(
+        homedir,
+        "Library",
+        "Application Support",
+        "Claude",
+        "claude_desktop_config.json"
+      );
+    default:
+      return path.join(
+        homedir,
+        ".config",
+        "claude-desktop",
+        "claude_desktop_config.json"
+      );
+  }
+}
 
-## Active Capabilities
-✓ Supabase MCP - Database operations
-✓ GitHub MCP - Code management
-✓ Context7 MCP - Documentation search
-✓ Filesystem MCP - Local operations
-✓ Memory MCP - Knowledge persistence
+const PROJECT_TYPE_DETECTORS = [
+  { check: (pkg, deps) => deps.react || deps["@types/react"], type: "React" },
+  { check: (pkg, deps) => deps.next, type: "Next.js" },
+  { check: (pkg, deps) => deps.vue, type: "Vue.js" },
+  { check: (pkg, deps) => deps.svelte, type: "Svelte" },
+  {
+    check: (pkg, deps) => deps.express || deps.fastify || deps.koa,
+    type: "Node.js API",
+  },
+  {
+    check: (pkg, deps) => pkg.type === "module" || deps.vitest,
+    type: "Node.js (ESM)",
+  },
+];
 
-## Operating Mode
-- Implementation focus
-- Quality without complexity
-- User-centric decisions
-- Data-driven choices
+const FILE_TYPE_DETECTORS = [
+  { file: "Cargo.toml", type: "Rust" },
+  { file: "pyproject.toml", type: "Python" },
+  { file: "go.mod", type: "Go" },
+];
 
-## Commands
-
-### Build
-"new feature [description]" → Implementation
-"fix [issue]" → Debug and resolve
-"optimize [component]" → Performance
-"test [feature]" → Test coverage
-
-### Analyze
-"review [code]" → Code review
-"audit [system]" → Security check
-"profile [component]" → Performance
-"investigate [issue]" → Root cause
-
-### Deploy
-"ship it" → Deployment checklist
-"rollback" → Revert changes
-"migrate" → Database updates
-"scale" → Performance tuning
-
-## Context Loaded From
-`;
-
-async function activateDevMode() {
-  console.log(chalk.cyan("\n⚡ Activating Dev Mode\n"));
-
+async function detectProjectType(projectPath) {
   try {
-    const workspacePath = path.join(os.homedir(), "claude-mcp-workspace");
+    const packageJsonPath = path.join(projectPath, "package.json");
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
 
-    // Check context files
-    console.log(chalk.yellow("Checking context:"));
-    const contextFiles = [
-      "DEV_MODE.md",
-      "BOOTSTRAP_LOVABLE.md",
-      "PRINCIPLES.md",
-    ];
+    const deps = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+    };
 
-    for (const file of contextFiles) {
-      try {
-        await fs.access(path.join(workspacePath, file));
-        console.log(chalk.green(`  ✓ ${file}`));
-      } catch {
-        console.log(chalk.red(`  ✗ ${file} (missing)`));
+    for (const detector of PROJECT_TYPE_DETECTORS) {
+      if (detector.check(packageJson, deps)) {
+        return detector.type;
       }
     }
 
-    // Check MCP servers
-    console.log(chalk.yellow("\nChecking MCP servers:"));
-    const configPath = path.join(
-      os.homedir(),
-      "Library",
-      "Application Support",
-      "Claude",
-      "claude_desktop_config.json"
-    );
-
-    try {
-      const config = JSON.parse(await fs.readFile(configPath, "utf-8"));
-      const servers = Object.keys(config.mcpServers || {});
-
-      ["filesystem", "memory", "github", "supabase", "context7"].forEach(
-        (server) => {
-          if (servers.includes(server)) {
-            console.log(chalk.green(`  ✓ ${server}`));
-          } else {
-            console.log(chalk.yellow(`  ⚠ ${server} (not configured)`));
-          }
-        }
-      );
-    } catch {
-      console.log(chalk.red("  ✗ Could not read configuration"));
+    return "Node.js";
+  } catch {
+    for (const detector of FILE_TYPE_DETECTORS) {
+      try {
+        await fs.access(path.join(projectPath, detector.file));
+        return detector.type;
+      } catch {
+        // File doesn't exist, continue to next detector
+      }
     }
 
-    // Create activation marker
-    const timestamp = new Date().toISOString();
-    await fs.writeFile(
-      path.join(workspacePath, "ACTIVE.md"),
-      DEV_MODE_ACTIVE +
-        `
-- Workspace: ${workspacePath}
-- Activated: ${timestamp}
-- Mode: Expert Multi-Disciplinary
+    return "General";
+  }
+}
 
-## Activation Phrase
+async function getMCPServerInfo(configPath) {
+  try {
+    const configContent = await fs.readFile(configPath, "utf-8");
+    if (configContent.length > 1024 * 1024) {
+      throw new Error("Config file too large");
+    }
 
-Copy and paste into Claude:
+    const config = JSON.parse(configContent);
+    const servers = config.mcpServers || {};
 
-"Dev Mode: Initialize expert mode with Bootstrap Lovable 2.0"
+    const serverDescriptions = {
+      memory:
+        "Save and recall project context, decisions, and important information",
+      "brave-search":
+        "Search the web for current information and documentation",
+      context7: "Look up documentation for libraries and frameworks",
+      tavily: "Research and analyze topics with AI-powered search",
+      supabase: "Interact with Supabase databases and APIs",
+    };
 
----
-*Quality without complexity. Ship fast, maintain forever.*
-`
+    return Object.keys(servers).map((name) => ({
+      name,
+      description: serverDescriptions[name] || "Custom MCP server",
+    }));
+  } catch (error) {
+    console.warn(
+      chalk.yellow(`Warning: Could not read MCP config: ${error.message}`)
+    );
+    return [];
+  }
+}
+
+function validateProjectPath(projectPath) {
+  if (!projectPath || typeof projectPath !== "string") {
+    throw new Error("Invalid project path");
+  }
+
+  const resolvedPath = path.resolve(projectPath);
+  const normalizedPath = path.normalize(resolvedPath);
+
+  if (normalizedPath.includes("..")) {
+    throw new Error("Path traversal not allowed");
+  }
+
+  return normalizedPath;
+}
+
+function generateContextContent(
+  projectPath,
+  projectType,
+  configPath,
+  mcpServers,
+  directoryStructure
+) {
+  return `# Claude MCP Workspace Context
+
+## Project Information
+- **Path**: ${projectPath}
+- **Type**: ${projectType}
+- **MCP Config**: ${configPath}
+- **Setup Date**: ${new Date().toISOString()}
+
+## Available MCP Tools
+${mcpServers.map((server) => `- **${server.name}**: ${server.description}`).join("\n")}
+
+## Key Directories
+${directoryStructure}
+
+## Development Patterns
+- This is a ${projectType} project with MCP integration
+- Claude has access to enhanced capabilities via MCP servers
+- Use memory MCP to persist important project context
+- Use search MCPs for research and documentation lookup
+
+## Quick Commands
+- "Save this to memory: [important info]"
+- "Search for documentation on [topic]"
+- "Help me understand this project structure"
+- "Research best practices for [technology]"
+`;
+}
+
+function generateIntegrationPrompt(
+  projectPath,
+  projectType,
+  configPath,
+  mcpServers
+) {
+  return `# 🚀 Claude MCP Workspace Setup Complete!
+
+Hi Claude! I've set up an MCP-enabled workspace for development. Here's everything you need to know:
+
+## 📁 Workspace Context
+- **Project Directory**: \`${projectPath}\`
+- **Project Type**: ${projectType}
+- **MCP Configuration**: \`${configPath}\`
+
+## 🛠️ Available MCP Tools
+${mcpServers.map((server) => `- **${server.name}**: ${server.description}`).join("\n")}
+
+${mcpServers.length === 0 ? "\n⚠️  **No MCP servers detected**. Run `claude-mcp-quickstart setup` to configure MCP servers." : ""}
+
+## 🧠 Please Save This Context
+Use your memory to save:
+\`\`\`
+Primary workspace: ${projectPath}
+Project type: ${projectType}
+Available MCP tools: ${mcpServers.map((s) => s.name).join(", ")}
+Context file: .claude-context (in project root)
+\`\`\`
+
+## 🚀 Ready to Develop!
+You can now help me with:
+- **Code analysis**: "Analyze the structure of this ${projectType} project"
+- **Research**: "Find best practices for ${projectType} development"
+- **Problem solving**: "Help me debug this issue"
+- **Documentation**: "Look up how to use [library]"
+
+## 📋 Quick Start Commands
+\`\`\`
+"Save this workspace context to memory"
+"Analyze my project structure" 
+"Search for ${projectType} best practices"
+"Help me explore this codebase"
+\`\`\`
+
+Ready to build something amazing together! 🎉`;
+}
+
+async function writeContextFiles(
+  projectPath,
+  contextContent,
+  integrationPrompt
+) {
+  const contextPath = path.join(projectPath, ".claude-context");
+  const promptPath = path.join(projectPath, ".claude-integration.md");
+
+  await fs.writeFile(contextPath, contextContent);
+  await fs.writeFile(promptPath, integrationPrompt);
+
+  return { promptPath, contextPath };
+}
+
+function displayResults(integrationPrompt) {
+  console.log(chalk.green("✅ Generated workspace context files:"));
+  console.log(chalk.gray(`   📄 .claude-context`));
+  console.log(chalk.gray(`   📄 .claude-integration.md`));
+
+  console.log(chalk.cyan("\n📋 Next Steps:"));
+  console.log(
+    chalk.yellow("1. Copy the content below and paste it into Claude:")
+  );
+  console.log(chalk.gray("─".repeat(60)));
+  console.log(integrationPrompt);
+  console.log(chalk.gray("─".repeat(60)));
+
+  console.log(chalk.cyan("\n💡 Pro Tips:"));
+  console.log(
+    chalk.gray("• Ask Claude to save the workspace context to memory")
+  );
+  console.log(
+    chalk.gray(
+      "• Use 'claude-mcp-quickstart dev-mode' anytime to regenerate this prompt"
+    )
+  );
+  console.log(
+    chalk.gray(
+      "• The .claude-context file contains project details for reference"
+    )
+  );
+}
+
+async function generateClaudeIntegration() {
+  console.log(chalk.cyan("\n🚀 Generating Claude Integration Prompt\n"));
+
+  try {
+    const projectPath = validateProjectPath(process.cwd());
+    const configPath = await getConfigPath();
+    const projectType = await detectProjectType(projectPath);
+    const mcpServers = await getMCPServerInfo(configPath);
+    const directoryStructure = await generateDirectoryStructure(projectPath);
+
+    const contextContent = generateContextContent(
+      projectPath,
+      projectType,
+      configPath,
+      mcpServers,
+      directoryStructure
+    );
+    const integrationPrompt = generateIntegrationPrompt(
+      projectPath,
+      projectType,
+      configPath,
+      mcpServers
     );
 
-    console.log(chalk.green("\n✅ Dev Mode Activated!\n"));
-    console.log(chalk.cyan("Test commands:"));
-    console.log(chalk.gray('  "Dev Mode: check setup"'));
-    console.log(chalk.gray('  "Dev Mode: analyze my code"'));
-    console.log(chalk.gray('  "Dev Mode: create auth flow"'));
-    console.log(chalk.gray('  "Dev Mode: optimize database"\n'));
+    const { promptPath, contextPath } = await writeContextFiles(
+      projectPath,
+      contextContent,
+      integrationPrompt
+    );
+
+    displayResults(integrationPrompt);
+
+    return { promptPath, contextPath };
   } catch (error) {
-    console.error(chalk.red("Activation failed:"), error.message);
-    process.exit(1);
+    console.error(
+      chalk.red("Error generating Claude integration:"),
+      error.message
+    );
+    throw error;
+  }
+}
+
+async function generateDirectoryStructure(projectPath) {
+  try {
+    const validatedPath = validateProjectPath(projectPath);
+    const items = await fs.readdir(validatedPath, { withFileTypes: true });
+    const dirs = items
+      .filter(
+        (item) =>
+          item.isDirectory() &&
+          !item.name.startsWith(".") &&
+          item.name !== "node_modules"
+      )
+      .slice(0, 10)
+      .map((dir) => `- \`${dir.name}/\``)
+      .join("\n");
+
+    return dirs || "- Project files in root directory";
+  } catch (error) {
+    console.warn(
+      chalk.yellow(
+        `Warning: Could not read directory structure: ${error.message}`
+      )
+    );
+    return "- Unable to read directory structure";
   }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  activateDevMode();
+  generateClaudeIntegration().catch((error) => {
+    console.error(
+      chalk.red("Error generating Claude integration:"),
+      error.message
+    );
+    process.exit(1);
+  });
 }
 
-export default activateDevMode;
+export default generateClaudeIntegration;

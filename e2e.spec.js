@@ -4,8 +4,6 @@ import path from "path";
 import { dir as tmpdir } from "tmp-promise";
 import {
   generateServerConfig,
-  getConfigPath,
-  getWorkspacePath,
 } from "./setup.js";
 
 // Mock external dependencies
@@ -34,15 +32,9 @@ vi.mock("inquirer", () => ({
 
 describe("end-to-end setup workflow", () => {
   let tempDir;
-  let originalGetConfigPath;
-  let originalGetWorkspacePath;
 
   beforeEach(async () => {
     tempDir = await tmpdir({ unsafeCleanup: true });
-
-    // Mock path functions to use temp directory
-    originalGetConfigPath = getConfigPath;
-    originalGetWorkspacePath = getWorkspacePath;
 
     vi.doMock("./setup.js", async () => {
       const actual = await vi.importActual("./setup.js");
