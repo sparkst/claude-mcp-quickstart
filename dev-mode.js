@@ -76,7 +76,7 @@ async function activateDevMode() {
       "Library",
       "Application Support",
       "Claude",
-      "claude_desktop_config.json",
+      "claude_desktop_config.json"
     );
 
     try {
@@ -90,7 +90,7 @@ async function activateDevMode() {
           } else {
             console.log(chalk.yellow(`  ⚠ ${server} (not configured)`));
           }
-        },
+        }
       );
     } catch {
       console.log(chalk.red("  ✗ Could not read configuration"));
@@ -114,7 +114,7 @@ Copy and paste into Claude:
 
 ---
 *Quality without complexity. Ship fast, maintain forever.*
-`,
+`
     );
 
     console.log(chalk.green("\n✅ Dev Mode Activated!\n"));

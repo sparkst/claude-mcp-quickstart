@@ -87,7 +87,7 @@ describe("end-to-end setup workflow", () => {
     expect(savedConfig.mcpServers.memory).toBeDefined();
     expect(savedConfig.mcpServers.filesystem.command).toBe("npx");
     expect(savedConfig.mcpServers.filesystem.args).toContain(
-      "@modelcontextprotocol/server-filesystem",
+      "@modelcontextprotocol/server-filesystem"
     );
   });
 
@@ -153,7 +153,7 @@ describe("end-to-end setup workflow", () => {
     for (const file of contextFiles) {
       await fs.writeFile(
         path.join(workspacePath, file),
-        `# ${file}\nTest content for ${file}`,
+        `# ${file}\nTest content for ${file}`
       );
     }
 
@@ -166,7 +166,7 @@ describe("end-to-end setup workflow", () => {
     // Verify file contents
     const devModeContent = await fs.readFile(
       path.join(workspacePath, "DEV_MODE.md"),
-      "utf-8",
+      "utf-8"
     );
     expect(devModeContent).toContain("DEV_MODE.md");
   });
@@ -194,7 +194,9 @@ describe("end-to-end setup workflow", () => {
     }
 
     // Test Supabase config separately (uses command line args, not env vars)
-    const supabaseConfig = generateServerConfig("supabase", { supabaseKey: "sb-test-key" });
+    const supabaseConfig = generateServerConfig("supabase", {
+      supabaseKey: "sb-test-key",
+    });
     expect(supabaseConfig).toBeDefined();
     expect(supabaseConfig.command).toBe("npx");
     expect(supabaseConfig.args).toContain("--access-token=sb-test-key");

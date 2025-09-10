@@ -23,26 +23,29 @@
     "quick-start": "node index.js quick-start",
     "test": "vitest",
     "test:run": "vitest run",
-    "lint": "echo 'No linter configured yet' && exit 0",
-    "format": "echo 'No formatter configured yet' && exit 0",
-    "format:check": "echo 'No formatter configured yet' && exit 0"
+    "lint": "eslint *.js",
+    "format": "prettier --write *.js",
+    "format:check": "prettier --check *.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/server-filesystem": "latest",
-    "@modelcontextprotocol/server-memory": "latest",
-    "@modelcontextprotocol/server-github": "latest",
     "@brave/brave-search-mcp-server": "latest",
+    "@modelcontextprotocol/server-filesystem": "latest",
+    "@modelcontextprotocol/server-github": "latest",
+    "@modelcontextprotocol/server-memory": "latest",
     "@supabase/mcp-server-supabase": "latest",
     "@upstash/context7-mcp": "latest",
-    "tavily-mcp": "latest",
     "chalk": "^5.3.0",
+    "commander": "^11.0.0",
     "inquirer": "^9.2.12",
     "ora": "^6.3.1",
-    "commander": "^11.0.0"
+    "tavily-mcp": "latest"
   },
   "devDependencies": {
-    "vitest": "^1.0.0",
-    "tmp-promise": "^3.0.0"
+    "@eslint/js": "^9.35.0",
+    "eslint": "^9.35.0",
+    "prettier": "^3.6.2",
+    "tmp-promise": "^3.0.0",
+    "vitest": "^1.0.0"
   },
   "keywords": [
     "mcp",

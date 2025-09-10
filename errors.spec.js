@@ -137,7 +137,7 @@ describe("error handling scenarios", () => {
 
       if (value && value.trim()) {
         expect(config).toBeDefined();
-        
+
         // Supabase uses command line args, others use env vars
         if (serverType === "supabase") {
           expect(config.args).toContain(`--access-token=${value}`);

@@ -11,7 +11,7 @@ describe("platform compatibility", () => {
       "Library",
       "Application Support",
       "Claude",
-      "claude_desktop_config.json",
+      "claude_desktop_config.json"
     );
 
     expect(configPath).toBe(expectedPath);

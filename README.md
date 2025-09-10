@@ -77,7 +77,10 @@ claude-mcp-quickstart/
 │   ├── prompt-library.md
 │   ├── lovable-patterns.md
 │   └── project-templates/
-└── *.spec.js          # Test files (47 tests)
+├── *.spec.js          # Test files (94 tests)
+├── vitest.config.js   # Test configuration & Windows compatibility  
+├── .prettierrc        # Code formatting rules
+└── eslint.config.js   # Code linting configuration
 ```
 
 ## Security Features
@@ -86,5 +89,34 @@ claude-mcp-quickstart/
 - Atomic configuration file writes
 - JSON parsing with error recovery
 - Comprehensive test coverage preventing regressions
+
+## Development
+
+### Prerequisites
+- Node.js 18+ (tested on 18, 20)
+- npm or npx
+
+### Development Scripts
+```bash
+npm test              # Run tests in watch mode
+npm run test:run      # Run tests once
+npm run lint          # Check code quality with ESLint
+npm run format        # Format code with Prettier
+npm run format:check  # Verify code formatting
+```
+
+### Cross-Platform Testing
+This package is tested on:
+- ✅ **Ubuntu Latest** (Node.js 18, 20)
+- ✅ **macOS Latest** (Node.js 18, 20) 
+- ✅ **Windows Latest** (Node.js 18, 20)
+
+Windows compatibility is ensured through a custom Vite plugin that handles shebang lines in the test environment.
+
+### Code Quality
+- **Prettier** for consistent formatting
+- **ESLint** for code quality
+- **94 comprehensive tests** covering core functionality
+- **Vitest** for fast, modern testing
 
 For detailed implementation guidelines, see [CLAUDE.md](./CLAUDE.md).

@@ -46,7 +46,7 @@ describe("CLI command structure", () => {
     const filesystemConfig = generateServerConfig("filesystem");
     expect(filesystemConfig.command).toBe("npx");
     expect(filesystemConfig.args).toContain(
-      "@modelcontextprotocol/server-filesystem",
+      "@modelcontextprotocol/server-filesystem"
     );
 
     const memoryConfig = generateServerConfig("memory");

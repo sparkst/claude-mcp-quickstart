@@ -167,9 +167,9 @@ async function setupQuickstart() {
 
     // Add GitHub if selected
     if (features.includes("github")) {
-      const existingToken = getExistingToken(existingConfig, 'github');
+      const existingToken = getExistingToken(existingConfig, "github");
       let promptMessage = "GitHub Token:";
-      
+
       if (existingToken) {
         const maskedToken = maskToken(existingToken);
         promptMessage = `GitHub Token [Current: ${maskedToken}] (Enter to keep, "-" to delete, or paste new):`;
@@ -198,7 +198,7 @@ async function setupQuickstart() {
         };
       } else if (githubToken) {
         // User provided new token - validate it
-        if (validateToken(githubToken, 'github')) {
+        if (validateToken(githubToken, "github")) {
           servers.github = {
             command: "npx",
             args: ["-y", "@modelcontextprotocol/server-github"],
@@ -212,9 +212,10 @@ async function setupQuickstart() {
 
     // Add Supabase if selected
     if (features.includes("supabase")) {
-      const existingToken = getExistingToken(existingConfig, 'supabase');
-      let promptMessage = "Supabase Access Token (from https://supabase.com/dashboard/account/tokens):";
-      
+      const existingToken = getExistingToken(existingConfig, "supabase");
+      let promptMessage =
+        "Supabase Access Token (from https://supabase.com/dashboard/account/tokens):";
+
       if (existingToken) {
         promptMessage = `Supabase Access Token [Current: ${maskToken(existingToken)}] (Enter to keep, "-" to delete, or paste new):`;
       }
@@ -235,13 +236,21 @@ async function setupQuickstart() {
         // User pressed Enter - keep existing
         servers.supabase = {
           command: "npx",
-          args: ["-y", "@supabase/mcp-server-supabase", `--access-token=${existingToken}`],
+          args: [
+            "-y",
+            "@supabase/mcp-server-supabase",
+            `--access-token=${existingToken}`,
+          ],
         };
       } else if (supabaseAccessToken) {
         // User provided new token
         servers.supabase = {
           command: "npx",
-          args: ["-y", "@supabase/mcp-server-supabase", `--access-token=${supabaseAccessToken}`],
+          args: [
+            "-y",
+            "@supabase/mcp-server-supabase",
+            `--access-token=${supabaseAccessToken}`,
+          ],
         };
       }
     }
@@ -290,9 +299,9 @@ async function setupQuickstart() {
 
     // Add Brave if selected
     if (features.includes("brave")) {
-      const existingToken = getExistingToken(existingConfig, 'brave');
+      const existingToken = getExistingToken(existingConfig, "brave");
       let promptMessage = "Brave Search API Key:";
-      
+
       if (existingToken) {
         promptMessage = `Brave Search API Key [Current: ${maskToken(existingToken)}] (Enter to keep, "-" to delete, or paste new):`;
       }
@@ -328,9 +337,9 @@ async function setupQuickstart() {
 
     // Add Tavily if selected
     if (features.includes("tavily")) {
-      const existingToken = getExistingToken(existingConfig, 'tavily');
+      const existingToken = getExistingToken(existingConfig, "tavily");
       let promptMessage = "Tavily API Key:";
-      
+
       if (existingToken) {
         promptMessage = `Tavily API Key [Current: ${maskToken(existingToken)}] (Enter to keep, "-" to delete, or paste new):`;
       }
@@ -367,14 +376,14 @@ async function setupQuickstart() {
     // Validate and merge configurations
     try {
       config = validateAndMergeConfig(config, servers);
-      
+
       // Save config with atomic write
       const configPath = getConfigPath();
       const tempConfigPath = `${configPath}.tmp`;
-      
+
       await fs.writeFile(tempConfigPath, JSON.stringify(config, null, 2));
       await fs.rename(tempConfigPath, configPath);
-      
+
       spinner.succeed("MCP servers configured");
     } catch (error) {
       spinner.fail("Configuration validation failed");
@@ -422,10 +431,10 @@ async function setupQuickstart() {
       // Create enhanced workspace structure
       const directories = [
         "lovable-framework",
-        "skippy-context", 
+        "skippy-context",
         "project-templates",
         "active-projects",
-        "usage-guides"
+        "usage-guides",
       ];
 
       for (const dir of directories) {
@@ -433,16 +442,20 @@ async function setupQuickstart() {
       }
 
       contextSpinner.text = "Copying Bootstrap Lovable v2 framework...";
-      
+
       // Copy entire bootstrap-lovable-v2 directory to workspace
       const bootstrapSource = path.join(process.cwd(), "bootstrap-lovable-v2");
       const bootstrapDest = path.join(workspacePath, "lovable-framework");
-      
+
       try {
         // Copy all bootstrap-lovable-v2 files recursively
         await copyDirectory(bootstrapSource, bootstrapDest);
       } catch (error) {
-        console.warn(chalk.yellow("Bootstrap Lovable v2 not found in current directory - creating basic structure"));
+        console.warn(
+          chalk.yellow(
+            "Bootstrap Lovable v2 not found in current directory - creating basic structure"
+          )
+        );
       }
 
       contextSpinner.text = "Creating AI assistant context files...";
@@ -456,7 +469,7 @@ async function setupQuickstart() {
         // Create basic dev mode
         await fs.writeFile(
           path.join(workspacePath, "DEV_MODE.md"),
-          EXPERT_CONTEXT.dev_mode_trigger,
+          EXPERT_CONTEXT.dev_mode_trigger
         );
       }
 
@@ -469,7 +482,9 @@ async function setupQuickstart() {
       // Create master context based on project type
       await createMasterContext(workspacePath, projectType, enableAssistant);
 
-      contextSpinner.succeed(`${projectType === 'lovable' ? 'Lovable' : 'Development'} workspace configured with ${enableAssistant ? 'AI assistant' : 'basic mode'}`);
+      contextSpinner.succeed(
+        `${projectType === "lovable" ? "Lovable" : "Development"} workspace configured with ${enableAssistant ? "AI assistant" : "basic mode"}`
+      );
     }
 
     console.log(chalk.green("\n✅ Setup complete!\n"));
@@ -489,13 +504,13 @@ async function copyDirectory(src, dest) {
   try {
     await fs.access(src);
     const entries = await fs.readdir(src, { withFileTypes: true });
-    
+
     await fs.mkdir(dest, { recursive: true });
-    
+
     for (const entry of entries) {
       const srcPath = path.join(src, entry.name);
       const destPath = path.join(dest, entry.name);
-      
+
       if (entry.isDirectory()) {
         await copyDirectory(srcPath, destPath);
       } else {
@@ -510,41 +525,51 @@ async function copyDirectory(src, dest) {
 async function readTemplate(templateName) {
   // Use package directory instead of current working directory
   const templatePath = path.join(__dirname, "templates", templateName);
-  
+
   try {
     await fs.access(templatePath);
     return await fs.readFile(templatePath, "utf8");
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      throw new Error(`Template file missing: ${templatePath}. Please ensure templates directory is present.`);
+    if (error.code === "ENOENT") {
+      throw new Error(
+        `Template file missing: ${templatePath}. Please ensure templates directory is present.`
+      );
     }
-    throw new Error(`Failed to read template ${templateName}: ${error.message}`);
+    throw new Error(
+      `Failed to read template ${templateName}: ${error.message}`
+    );
   }
 }
 
 function maskToken(token) {
   if (!token || token.length < 8) return token;
-  return token.substring(0, 5) + '*'.repeat(token.length - 8) + token.substring(token.length - 3);
+  return (
+    token.substring(0, 5) +
+    "*".repeat(token.length - 8) +
+    token.substring(token.length - 3)
+  );
 }
 
 async function loadExistingConfig() {
   try {
     const configPath = getConfigPath();
     const configContent = await fs.readFile(configPath, "utf8");
-    
+
     // Safely parse JSON with proper error handling
     try {
       const config = JSON.parse(configContent);
       // Validate basic structure
-      if (!config || typeof config !== 'object') {
-        throw new Error('Invalid config structure');
+      if (!config || typeof config !== "object") {
+        throw new Error("Invalid config structure");
       }
       return {
         mcpServers: config.mcpServers || {},
-        ...config
+        ...config,
       };
     } catch (parseError) {
-      console.warn(chalk.yellow(`Invalid JSON in config file: ${parseError.message}`));
+      console.warn(
+        chalk.yellow(`Invalid JSON in config file: ${parseError.message}`)
+      );
       return { mcpServers: {} };
     }
   } catch (error) {
@@ -558,8 +583,8 @@ function getExistingToken(existingConfig, serverName) {
   if (!server) {
     // Also check alternative server names for backward compatibility
     const alternativeNames = {
-      'brave': 'brave-search',  // Check brave-search if brave not found
-      'tavily': 'tavily-search' // Check tavily-search if tavily not found
+      brave: "brave-search", // Check brave-search if brave not found
+      tavily: "tavily-search", // Check tavily-search if tavily not found
     };
     const altName = alternativeNames[serverName];
     if (altName) {
@@ -570,40 +595,47 @@ function getExistingToken(existingConfig, serverName) {
     }
     return null;
   }
-  
+
   // Handle different token storage methods
   if (server.env) {
     // Environment variable tokens - check multiple possible keys
     const tokenKeys = {
-      github: ['GITHUB_TOKEN', 'GITHUB_PERSONAL_ACCESS_TOKEN'],
-      'brave-search': ['BRAVE_API_KEY'],
-      brave: ['BRAVE_API_KEY'],
-      'tavily-search': ['TAVILY_API_KEY'],
-      tavily: ['TAVILY_API_KEY']
+      github: ["GITHUB_TOKEN", "GITHUB_PERSONAL_ACCESS_TOKEN"],
+      "brave-search": ["BRAVE_API_KEY"],
+      brave: ["BRAVE_API_KEY"],
+      "tavily-search": ["TAVILY_API_KEY"],
+      tavily: ["TAVILY_API_KEY"],
     };
-    
+
     const possibleKeys = tokenKeys[serverName] || [];
     for (const key of possibleKeys) {
       if (server.env[key]) {
         return server.env[key];
       }
     }
-  } else if (server.args && (serverName === 'supabase' || serverName.includes('supabase'))) {
+  } else if (
+    server.args &&
+    (serverName === "supabase" || serverName.includes("supabase"))
+  ) {
     // Command line argument tokens (Supabase)
-    const tokenArg = server.args.find(arg => arg.startsWith('--access-token='));
+    const tokenArg = server.args.find((arg) =>
+      arg.startsWith("--access-token=")
+    );
     if (tokenArg) {
-      const token = tokenArg.replace('--access-token=', '');
+      const token = tokenArg.replace("--access-token=", "");
       // Clean up malformed tokens (trailing quotes, empty values)
-      return token && token !== '"' && token !== '""' && token.trim() ? token.replace(/^["']|["']$/g, '') : null;
+      return token && token !== '"' && token !== '""' && token.trim()
+        ? token.replace(/^["']|["']$/g, "")
+        : null;
     }
   }
-  
+
   return null;
 }
 
 // Security utility to clear sensitive strings from memory
 function clearToken(tokenRef) {
-  if (typeof tokenRef === 'string' && tokenRef.length > 0) {
+  if (typeof tokenRef === "string" && tokenRef.length > 0) {
     // Overwrite the string content (best effort in JavaScript)
     tokenRef = null;
     // Force garbage collection hint
@@ -624,7 +656,7 @@ function withSecureToken(token, callback) {
 
 // Validate token format for basic security
 function validateToken(token, serverType) {
-  if (!token || typeof token !== 'string') {
+  if (!token || typeof token !== "string") {
     return false;
   }
 
@@ -633,7 +665,7 @@ function validateToken(token, serverType) {
     github: /^(gh[ps]_[a-zA-Z0-9]{36,40}|[a-f0-9]{40})$/,
     supabase: /^sb[a-z]_[a-zA-Z0-9_-]+$/,
     brave: /^[A-Z0-9]{32,}$/,
-    tavily: /^tvly-[a-zA-Z0-9_-]{20,}$/
+    tavily: /^tvly-[a-zA-Z0-9_-]{20,}$/,
   };
 
   const pattern = patterns[serverType];
@@ -643,30 +675,35 @@ function validateToken(token, serverType) {
 // Validate and merge configuration
 function validateAndMergeConfig(existingConfig, newServers) {
   // Validate existing config structure
-  if (!existingConfig || typeof existingConfig !== 'object') {
-    throw new Error('Invalid existing configuration');
+  if (!existingConfig || typeof existingConfig !== "object") {
+    throw new Error("Invalid existing configuration");
   }
 
   // Ensure mcpServers exists
-  if (!existingConfig.mcpServers || typeof existingConfig.mcpServers !== 'object') {
+  if (
+    !existingConfig.mcpServers ||
+    typeof existingConfig.mcpServers !== "object"
+  ) {
     existingConfig.mcpServers = {};
   }
 
   // Validate new servers
   for (const [serverName, serverConfig] of Object.entries(newServers)) {
-    if (!serverConfig || typeof serverConfig !== 'object') {
+    if (!serverConfig || typeof serverConfig !== "object") {
       throw new Error(`Invalid configuration for server: ${serverName}`);
     }
-    
+
     if (!serverConfig.command || !Array.isArray(serverConfig.args)) {
-      throw new Error(`Invalid server configuration structure for: ${serverName}`);
+      throw new Error(
+        `Invalid server configuration structure for: ${serverName}`
+      );
     }
   }
 
   // Safe merge
   return {
     ...existingConfig,
-    mcpServers: { ...existingConfig.mcpServers, ...newServers }
+    mcpServers: { ...existingConfig.mcpServers, ...newServers },
   };
 }
 
@@ -687,7 +724,6 @@ async function createLovablePatterns(workspacePath) {
   );
 }
 
-
 async function createPromptLibrary(workspacePath) {
   const template = await readTemplate("prompt-library.md");
   await fs.writeFile(
@@ -697,9 +733,13 @@ async function createPromptLibrary(workspacePath) {
 }
 
 async function createProjectTemplates(workspacePath, projectType) {
-  await fs.mkdir(path.join(workspacePath, "project-templates"), { recursive: true });
-  
-  const template = await readTemplate(`project-templates/${projectType}-template.md`);
+  await fs.mkdir(path.join(workspacePath, "project-templates"), {
+    recursive: true,
+  });
+
+  const template = await readTemplate(
+    `project-templates/${projectType}-template.md`
+  );
   await fs.writeFile(
     path.join(workspacePath, "project-templates", `${projectType}-template.md`),
     template
@@ -708,20 +748,21 @@ async function createProjectTemplates(workspacePath, projectType) {
 
 async function createUsageGuides(workspacePath, projectType, enableAssistant) {
   const template = await readTemplate("usage-guide.md");
-  await fs.writeFile(
-    path.join(workspacePath, "USAGE_GUIDE.md"),
-    template
-  );
+  await fs.writeFile(path.join(workspacePath, "USAGE_GUIDE.md"), template);
 }
 
-async function createMasterContext(workspacePath, projectType, enableAssistant) {
-  const contextContent = enableAssistant ? 
-    `# AI Assistant Lovable Development Context
+async function createMasterContext(
+  workspacePath,
+  projectType,
+  enableAssistant
+) {
+  const contextContent = enableAssistant
+    ? `# AI Assistant Lovable Development Context
 
 ## 🎯 Development Environment
 - **AI Personality**: Expert Assistant (Brilliant + Supportive)
 - **Platform**: Lovable.dev (React + Tailwind + Supabase)
-- **Project Type**: ${projectType === 'lovable' ? 'Full-Stack Application' : 'Custom Development'}
+- **Project Type**: ${projectType === "lovable" ? "Full-Stack Application" : "Custom Development"}
 - **MCP Integration**: Full access to Supabase, GitHub, Context7, Tavily
 
 Type **"Dev Mode"** followed by your request.
@@ -765,11 +806,11 @@ claude-mcp-workspace/
 **Optimization Mode**: Performance and architecture improvements
 **Learning Mode**: Teaching concepts and best practices
 
-**AI Promise**: *"I'll make your Lovable development journey brilliant, efficient, and genuinely fun. We're going to build something incredible together!"* 🚀` 
+**AI Promise**: *"I'll make your Lovable development journey brilliant, efficient, and genuinely fun. We're going to build something incredible together!"* 🚀`
     : `# Basic Development Context
 
 ## 🎯 Development Setup
-- **Platform**: ${projectType === 'lovable' ? 'Lovable.dev' : 'Standard Development'}
+- **Platform**: ${projectType === "lovable" ? "Lovable.dev" : "Standard Development"}
 - **MCP Integration**: Basic access to development tools
 
 ## 📁 Workspace Structure
@@ -783,10 +824,7 @@ claude-mcp-workspace/
 
 Ready for development assistance.`;
 
-  await fs.writeFile(
-    path.join(workspacePath, "CONTEXT.md"),
-    contextContent
-  );
+  await fs.writeFile(path.join(workspacePath, "CONTEXT.md"), contextContent);
 }
 
 export function generateServerConfig(serverType, options = {}) {
@@ -822,7 +860,11 @@ export function generateServerConfig(serverType, options = {}) {
     supabase: supabaseKey
       ? {
           command: "npx",
-          args: ["-y", "@supabase/mcp-server-supabase", `--access-token=${supabaseKey}`],
+          args: [
+            "-y",
+            "@supabase/mcp-server-supabase",
+            `--access-token=${supabaseKey}`,
+          ],
         }
       : null,
     context7: context7ApiKey
@@ -856,7 +898,7 @@ export function getConfigPath() {
     "Library",
     "Application Support",
     "Claude",
-    "claude_desktop_config.json",
+    "claude_desktop_config.json"
   );
 }
 

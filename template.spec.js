@@ -13,9 +13,9 @@ describe("readTemplate", () => {
   test("reads all core template files correctly", async () => {
     const coreTemplates = [
       "ai-activation.md",
-      "lovable-patterns.md", 
+      "lovable-patterns.md",
       "prompt-library.md",
-      "usage-guide.md"
+      "usage-guide.md",
     ];
 
     for (const templateName of coreTemplates) {
@@ -30,8 +30,8 @@ describe("readTemplate", () => {
     const projectTemplates = [
       "project-templates/api-template.md",
       "project-templates/learning-template.md",
-      "project-templates/lovable-template.md", 
-      "project-templates/minimal-template.md"
+      "project-templates/lovable-template.md",
+      "project-templates/minimal-template.md",
     ];
 
     for (const templateName of projectTemplates) {
@@ -43,9 +43,9 @@ describe("readTemplate", () => {
   });
 
   test("throws error for missing template files", async () => {
-    await expect(readTemplate("nonexistent-template.md"))
-      .rejects
-      .toThrow("Template file missing");
+    await expect(readTemplate("nonexistent-template.md")).rejects.toThrow(
+      "Template file missing"
+    );
   });
 
   test("error message includes correct path for missing templates", async () => {
@@ -63,7 +63,7 @@ describe("readTemplate", () => {
     // This test ensures the fix works by reading actual template content
     const content = await readTemplate("ai-activation.md");
     expect(content).toContain("AI Assistant - Instant Activation");
-    
+
     // Test that it would work regardless of cwd by checking the implementation behavior
     // The key fix is using __dirname instead of process.cwd()
     expect(content).toBeTruthy();

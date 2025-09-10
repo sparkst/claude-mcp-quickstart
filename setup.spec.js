@@ -70,7 +70,11 @@ describe("generateServerConfig", () => {
     const config = generateServerConfig("supabase", { supabaseKey });
     expect(config).toEqual({
       command: "npx",
-      args: ["-y", "@supabase/mcp-server-supabase", "--access-token=sb-test-key"],
+      args: [
+        "-y",
+        "@supabase/mcp-server-supabase",
+        "--access-token=sb-test-key",
+      ],
     });
   });
 
@@ -123,8 +127,8 @@ describe("getConfigPath", () => {
         "Library",
         "Application Support",
         "Claude",
-        "claude_desktop_config.json",
-      ),
+        "claude_desktop_config.json"
+      )
     );
   });
 });
@@ -192,9 +196,9 @@ describe("loadExistingConfig", () => {
         github: {
           command: "npx",
           args: ["-y", "@modelcontextprotocol/server-github"],
-          env: { GITHUB_TOKEN: "test-token" }
-        }
-      }
+          env: { GITHUB_TOKEN: "test-token" },
+        },
+      },
     };
 
     vi.spyOn(fs, "readFile").mockResolvedValue(JSON.stringify(mockConfig));
@@ -224,9 +228,9 @@ describe("getExistingToken", () => {
       mcpServers: {
         github: {
           command: "npx",
-          env: { GITHUB_TOKEN: "ghp_test123456789" }
-        }
-      }
+          env: { GITHUB_TOKEN: "ghp_test123456789" },
+        },
+      },
     };
 
     const token = getExistingToken(config, "github");
@@ -238,9 +242,13 @@ describe("getExistingToken", () => {
       mcpServers: {
         supabase: {
           command: "npx",
-          args: ["-y", "@supabase/mcp-server-supabase", "--access-token=sbp_test123"]
-        }
-      }
+          args: [
+            "-y",
+            "@supabase/mcp-server-supabase",
+            "--access-token=sbp_test123",
+          ],
+        },
+      },
     };
 
     const token = getExistingToken(config, "supabase");
@@ -252,9 +260,9 @@ describe("getExistingToken", () => {
       mcpServers: {
         brave: {
           command: "npx",
-          env: { BRAVE_API_KEY: "brave_test_key" }
-        }
-      }
+          env: { BRAVE_API_KEY: "brave_test_key" },
+        },
+      },
     };
 
     const token = getExistingToken(config, "brave");
@@ -266,9 +274,9 @@ describe("getExistingToken", () => {
       mcpServers: {
         tavily: {
           command: "npx",
-          env: { TAVILY_API_KEY: "tavily_test_key" }
-        }
-      }
+          env: { TAVILY_API_KEY: "tavily_test_key" },
+        },
+      },
     };
 
     const token = getExistingToken(config, "tavily");
@@ -286,9 +294,9 @@ describe("getExistingToken", () => {
       mcpServers: {
         github: {
           command: "npx",
-          args: ["-y", "@modelcontextprotocol/server-github"]
-        }
-      }
+          args: ["-y", "@modelcontextprotocol/server-github"],
+        },
+      },
     };
 
     const token = getExistingToken(config, "github");
@@ -300,9 +308,9 @@ describe("getExistingToken", () => {
       mcpServers: {
         github: {
           command: "npx",
-          env: { OTHER_TOKEN: "test" }
-        }
-      }
+          env: { OTHER_TOKEN: "test" },
+        },
+      },
     };
 
     const token = getExistingToken(config, "github");
@@ -314,9 +322,9 @@ describe("getExistingToken", () => {
       mcpServers: {
         supabase: {
           command: "npx",
-          args: ["-y", "@supabase/mcp-server-supabase", "--other-option=value"]
-        }
-      }
+          args: ["-y", "@supabase/mcp-server-supabase", "--other-option=value"],
+        },
+      },
     };
 
     const token = getExistingToken(config, "supabase");
@@ -328,9 +336,9 @@ describe("getExistingToken", () => {
       mcpServers: {
         unknown: {
           command: "npx",
-          env: { SOME_TOKEN: "test" }
-        }
-      }
+          env: { SOME_TOKEN: "test" },
+        },
+      },
     };
 
     const token = getExistingToken(config, "unknown");
@@ -342,9 +350,9 @@ describe("getExistingToken", () => {
       mcpServers: {
         github: {
           command: "npx",
-          env: { GITHUB_PERSONAL_ACCESS_TOKEN: "ghp_personal123456789" }
-        }
-      }
+          env: { GITHUB_PERSONAL_ACCESS_TOKEN: "ghp_personal123456789" },
+        },
+      },
     };
 
     const token = getExistingToken(config, "github");
@@ -356,9 +364,9 @@ describe("getExistingToken", () => {
       mcpServers: {
         "brave-search": {
           command: "npx",
-          env: { BRAVE_API_KEY: "brave_compat_key" }
-        }
-      }
+          env: { BRAVE_API_KEY: "brave_compat_key" },
+        },
+      },
     };
 
     const token = getExistingToken(config, "brave");
@@ -370,9 +378,9 @@ describe("getExistingToken", () => {
       mcpServers: {
         "tavily-search": {
           command: "npx",
-          env: { TAVILY_API_KEY: "tavily_compat_key" }
-        }
-      }
+          env: { TAVILY_API_KEY: "tavily_compat_key" },
+        },
+      },
     };
 
     const token = getExistingToken(config, "tavily");
@@ -384,9 +392,13 @@ describe("getExistingToken", () => {
       mcpServers: {
         supabase: {
           command: "npx",
-          args: ["-y", "@supabase/mcp-server-supabase", '--access-token="malformed_token"']
-        }
-      }
+          args: [
+            "-y",
+            "@supabase/mcp-server-supabase",
+            '--access-token="malformed_token"',
+          ],
+        },
+      },
     };
 
     const token = getExistingToken(config, "supabase");
@@ -398,9 +410,9 @@ describe("getExistingToken", () => {
       mcpServers: {
         supabase: {
           command: "npx",
-          args: ["-y", "@supabase/mcp-server-supabase", '--access-token="']
-        }
-      }
+          args: ["-y", "@supabase/mcp-server-supabase", '--access-token="'],
+        },
+      },
     };
 
     const token = getExistingToken(config, "supabase");
@@ -410,8 +422,12 @@ describe("getExistingToken", () => {
 
 describe("validateToken", () => {
   test("validates GitHub personal access token", () => {
-    expect(validateToken("ghp_1234567890abcdef1234567890abcdef123456", "github")).toBe(true);
-    expect(validateToken("ghs_1234567890abcdef1234567890abcdef123456", "github")).toBe(true);
+    expect(
+      validateToken("ghp_1234567890abcdef1234567890abcdef123456", "github")
+    ).toBe(true);
+    expect(
+      validateToken("ghs_1234567890abcdef1234567890abcdef123456", "github")
+    ).toBe(true);
     expect(validateToken("invalid-token", "github")).toBe(false);
   });
 
@@ -422,13 +438,17 @@ describe("validateToken", () => {
   });
 
   test("validates Brave API key", () => {
-    expect(validateToken("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456", "brave")).toBe(true);
+    expect(validateToken("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456", "brave")).toBe(
+      true
+    );
     expect(validateToken("lowercase-key", "brave")).toBe(false);
     expect(validateToken("SHORT", "brave")).toBe(false);
   });
 
   test("validates Tavily API key", () => {
-    expect(validateToken("tvly-abcdefghijklmnopqrstuvwxyz123456", "tavily")).toBe(true);
+    expect(
+      validateToken("tvly-abcdefghijklmnopqrstuvwxyz123456", "tavily")
+    ).toBe(true);
     expect(validateToken("invalid-tavily-key", "tavily")).toBe(false);
   });
 
@@ -447,55 +467,61 @@ describe("validateToken", () => {
 
 describe("validateAndMergeConfig", () => {
   test("merges valid configurations", () => {
-    const existingConfig = createMockConfig({ 
-      github: createMockServer("github", "existing-token")
+    const existingConfig = createMockConfig({
+      github: createMockServer("github", "existing-token"),
     });
-    
+
     const newServers = {
-      supabase: createMockServer("supabase", "new-token")
+      supabase: createMockServer("supabase", "new-token"),
     };
 
     const result = validateAndMergeConfig(existingConfig, newServers);
-    
+
     expect(result.mcpServers).toHaveProperty("github");
     expect(result.mcpServers).toHaveProperty("supabase");
     expect(result.mcpServers.github.env.GITHUB_TOKEN).toBe("existing-token");
   });
 
   test("throws error for invalid existing config", () => {
-    expect(() => validateAndMergeConfig(null, {})).toThrow("Invalid existing configuration");
-    expect(() => validateAndMergeConfig("invalid", {})).toThrow("Invalid existing configuration");
+    expect(() => validateAndMergeConfig(null, {})).toThrow(
+      "Invalid existing configuration"
+    );
+    expect(() => validateAndMergeConfig("invalid", {})).toThrow(
+      "Invalid existing configuration"
+    );
   });
 
   test("creates mcpServers if missing", () => {
     const existingConfig = {};
     const newServers = {
-      github: createMockServer("github", "test-token")
+      github: createMockServer("github", "test-token"),
     };
 
     const result = validateAndMergeConfig(existingConfig, newServers);
-    
+
     expect(result.mcpServers).toHaveProperty("github");
   });
 
   test("throws error for invalid server config", () => {
     const existingConfig = createMockConfig();
     const invalidServers = {
-      github: null
+      github: null,
     };
 
-    expect(() => validateAndMergeConfig(existingConfig, invalidServers))
-      .toThrow("Invalid configuration for server: github");
+    expect(() =>
+      validateAndMergeConfig(existingConfig, invalidServers)
+    ).toThrow("Invalid configuration for server: github");
   });
 
   test("throws error for malformed server structure", () => {
     const existingConfig = createMockConfig();
     const invalidServers = {
-      github: { command: "npx" } // missing args array
+      github: { command: "npx" }, // missing args array
     };
 
-    expect(() => validateAndMergeConfig(existingConfig, invalidServers))
-      .toThrow("Invalid server configuration structure for: github");
+    expect(() =>
+      validateAndMergeConfig(existingConfig, invalidServers)
+    ).toThrow("Invalid server configuration structure for: github");
   });
 });
 
@@ -503,9 +529,9 @@ describe("withSecureToken", () => {
   test("executes callback with token", () => {
     const token = "test-token";
     const callback = vi.fn((t) => t.toUpperCase());
-    
+
     const result = withSecureToken(token, callback);
-    
+
     expect(callback).toHaveBeenCalledWith(token);
     expect(result).toBe("TEST-TOKEN");
   });
@@ -513,19 +539,19 @@ describe("withSecureToken", () => {
   test("clears token after callback execution", () => {
     const token = "sensitive-token";
     let capturedToken = null;
-    
+
     withSecureToken(token, (t) => {
       capturedToken = t;
       return "processed";
     });
-    
+
     // Token should have been captured during callback
     expect(capturedToken).toBe("sensitive-token");
   });
 
   test("clears token even if callback throws", () => {
     const token = "error-token";
-    
+
     expect(() => {
       withSecureToken(token, () => {
         throw new Error("Test error");
