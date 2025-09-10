@@ -17,13 +17,10 @@ test/
 # Claude-specific files (private)
 CLAUDE.md
 .claude/
-.claude-*
+.claude-context
 
 # Customer communications (private)
 customer-*.md
-
-# External dependencies/bootstrap
-bootstrap-*/
 
 # Claude Code secret guardrails
 .env
