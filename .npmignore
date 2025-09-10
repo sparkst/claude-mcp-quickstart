@@ -1,5 +1,14 @@
-# ignore everything except what we need for npm
-*
-!index.js
-!package.json
-!README.md
+# Development and test files
+*.spec.js
+vitest.config.js
+eslint.config.js
+.prettierrc
+
+# Backup files
+*.backup.*
+
+# Development artifacts
+node_modules/
+.git/
+.gitignore
+coverage/

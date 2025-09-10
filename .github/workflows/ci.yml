@@ -57,6 +57,10 @@ jobs:
         mkdir -p test-templates
         cd test-templates
         echo "Current directory: $(pwd)"
-        # This would fail before the fix due to template path resolution
-        timeout 10s claude-mcp-quickstart setup </dev/null || true
+        # Test template access - should succeed with proper exit code
+        if timeout 10s claude-mcp-quickstart setup </dev/null; then
+          echo "Template access test: PASSED"
+        else
+          echo "Template access test: FAILED (expected for interactive setup)"
+        fi
       continue-on-error: true

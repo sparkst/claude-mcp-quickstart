@@ -119,4 +119,10 @@ Windows compatibility is ensured through a custom Vite plugin that handles sheba
 - **94 comprehensive tests** covering core functionality
 - **Vitest** for fast, modern testing
 
+### Troubleshooting CI Issues
+If you encounter Windows CI failures:
+- **Path issues**: Use filename checks instead of full path assertions in tests
+- **Shell issues**: Add `shell: bash` to GitHub Actions steps that use wildcards or Unix commands
+- **Debug command**: Use `gh run view <run-id> --log-failed` to see detailed failure logs
+
 For detailed implementation guidelines, see [CLAUDE.md](./CLAUDE.md).

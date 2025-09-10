@@ -56,4 +56,10 @@ describe("removeShebang", () => {
     const result = removeShebang(code);
     expect(result).toBe("console.log('windows');");
   });
+
+  test("handles Unix line endings separately", () => {
+    const code = "#!/usr/bin/env node\nconsole.log('unix');";
+    const result = removeShebang(code);
+    expect(result).toBe("console.log('unix');");
+  });
 });

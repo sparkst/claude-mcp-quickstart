@@ -12,12 +12,13 @@ export default [
         Buffer: "readonly",
         __dirname: "readonly",
         __filename: "readonly",
+        global: "readonly",
+        require: "readonly",
       },
     },
     rules: {
       "no-unused-vars": "warn", // Warn but don't fail on unused variables
       "no-console": "off",
-      "no-undef": "off", // Allow Node.js globals like require, global
     },
   },
 ];

@@ -11,7 +11,11 @@ export default defineConfig({
   plugins: [
     {
       name: "remove-shebang",
-      transform(code, _id) {
+      transform(code, id) {
+        // Skip non-JavaScript files for performance
+        if (id && !id.endsWith('.js')) {
+          return code;
+        }
         return removeShebang(code);
       },
     },
