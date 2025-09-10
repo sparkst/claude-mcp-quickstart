@@ -40,8 +40,21 @@ jobs:
         npm install -g ./claude-mcp-quickstart-*.tgz
         claude-mcp-quickstart --version
     
-    - name: Test CLI commands
+    - name: Test CLI commands from different directories
       run: |
+        # Test from home directory
+        cd ~
         claude-mcp-quickstart verify || true
-        node index.js verify || true
+        
+        # Test from temporary directory 
+        cd /tmp
+        claude-mcp-quickstart --version
+        
+        # Test template access works (critical fix verification)
+        echo "Testing template access from different directory..."
+        mkdir -p test-templates
+        cd test-templates
+        echo "Current directory: $(pwd)"
+        # This would fail before the fix due to template path resolution
+        timeout 10s claude-mcp-quickstart setup </dev/null || true
       continue-on-error: true

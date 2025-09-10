@@ -3,6 +3,7 @@ import {
   generateServerConfig,
   getConfigPath,
   getWorkspacePath,
+  readTemplate,
 } from "./setup.js";
 import {
   maskToken,
@@ -532,3 +533,5 @@ describe("withSecureToken", () => {
     }).toThrow("Test error");
   });
 });
+
+// Template tests moved to template.spec.js to avoid fs mocking conflicts

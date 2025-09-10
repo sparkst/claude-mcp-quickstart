@@ -864,6 +864,8 @@ export function getWorkspacePath() {
   return path.join(os.homedir(), "claude-mcp-workspace");
 }
 
+export { readTemplate };
+
 // Run setup
 if (import.meta.url === `file://${process.argv[1]}`) {
   setupQuickstart();
