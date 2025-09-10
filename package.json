@@ -62,9 +62,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sparkst/claude-mcp-quickstart.git"
-  },
-  "scripts": {
-    "guard:reqs": "node scripts/guard-reqs.js",
-    "preqgit": "npm run guard:reqs && npm run lint && npm run typecheck && npm test"
   }
 }
