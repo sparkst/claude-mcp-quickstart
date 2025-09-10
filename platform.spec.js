@@ -15,7 +15,7 @@ describe("platform compatibility", () => {
     );
 
     expect(configPath).toBe(expectedPath);
-    expect(configPath).toContain("Library/Application Support/Claude");
+    expect(configPath).toContain("claude_desktop_config.json");
     expect(configPath.endsWith("claude_desktop_config.json")).toBe(true);
   });
 

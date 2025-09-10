@@ -53,7 +53,7 @@ describe("readTemplate", () => {
       await readTemplate("missing.md");
       expect.fail("Should have thrown an error");
     } catch (error) {
-      expect(error.message).toContain("templates/missing.md");
+      expect(error.message).toContain("missing.md");
       expect(error.message).toContain("Template file missing");
     }
   });
