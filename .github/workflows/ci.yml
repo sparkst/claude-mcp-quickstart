@@ -21,10 +21,27 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
     
     - name: Verify Script Syntax
       run: node -c index.js
     
-    - name: Test Verify Command
-      run: node index.js verify || true
+    - name: Run tests
+      run: npm run test:run
+    
+    - name: Test package creation
+      run: npm pack
+    
+    - name: Test global install
+      run: |
+        npm install -g ./claude-mcp-quickstart-*.tgz
+        claude-mcp-quickstart --version
+    
+    - name: Test CLI commands
+      run: |
+        claude-mcp-quickstart verify || true
+        node index.js verify || true
       continue-on-error: true

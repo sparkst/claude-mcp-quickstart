@@ -11,14 +11,21 @@
     "index.js",
     "setup.js",
     "dev-mode.js",
-    "templates/"
+    "templates/",
+    "bootstrap-lovable-v2/",
+    "test-utils.js",
+    "!**/*.backup.*"
   ],
   "scripts": {
     "setup": "node setup.js",
     "dev-mode": "node dev-mode.js",
     "verify": "node index.js verify",
     "quick-start": "node index.js quick-start",
-    "test": "vitest"
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "echo 'No linter configured yet' && exit 0",
+    "format": "echo 'No formatter configured yet' && exit 0",
+    "format:check": "echo 'No formatter configured yet' && exit 0"
   },
   "dependencies": {
     "@modelcontextprotocol/server-filesystem": "latest",
