@@ -1,10 +1,29 @@
 node_modules/
 *.log
 .DS_Store
-*.backup.*
 dist/
 npm-package/
 test/
+
+# Package artifacts and old versions
+*.tgz
+*.tar.gz
+
+# Backup files
+*.backup.*
+*~
+.#*
+
+# Claude-specific files (private)
+CLAUDE.md
+.claude/
+.claude-*
+
+# Customer communications (private)
+customer-*.md
+
+# External dependencies/bootstrap
+bootstrap-*/
 
 # Claude Code secret guardrails
 .env
