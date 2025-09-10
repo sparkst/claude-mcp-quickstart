@@ -36,11 +36,13 @@ jobs:
       run: npm pack
     
     - name: Test global install
+      shell: bash
       run: |
         npm install -g ./claude-mcp-quickstart-*.tgz
         claude-mcp-quickstart --version
     
     - name: Test CLI commands from different directories
+      shell: bash
       run: |
         # Test from home directory
         cd ~
