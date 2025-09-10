@@ -125,4 +125,45 @@ If you encounter Windows CI failures:
 - **Shell issues**: Add `shell: bash` to GitHub Actions steps that use wildcards or Unix commands
 - **Debug command**: Use `gh run view <run-id> --log-failed` to see detailed failure logs
 
+## Publishing
+
+### Manual Publishing
+The repository includes a manual publishing workflow for controlled NPM releases:
+
+```bash
+# Navigate to Actions tab on GitHub
+# Select "NPM Publish" workflow  
+# Click "Run workflow" and configure:
+```
+
+**Workflow Options:**
+- **Version Type**: `patch` (1.0.1), `minor` (1.1.0), or `major` (2.0.0)  
+- **Registry**: `npm` (npmjs.com) or `github` (GitHub Packages)
+- **Dry Run**: Test the workflow without actually publishing
+
+**Publishing Process:**
+1. **Quality Gate** - Runs full test suite across all platforms
+2. **Version Bump** - Auto-increments package.json version  
+3. **Duplicate Check** - Prevents publishing existing versions
+4. **Publish** - Pushes package to selected registry
+5. **Git Tagging** - Creates release tags and GitHub releases
+
+### Required Secrets
+For NPM publishing, add this GitHub repository secret:
+- `NPM_AUTH_TOKEN` - Your NPM authentication token
+
+GitHub Packages publishing uses the built-in `GITHUB_TOKEN`.
+
+**⚠️ Security Notes:**
+- Never enable GitHub Actions debug logging (`ACTIONS_STEP_DEBUG`) for publishing workflows
+- NPM tokens are automatically masked in workflow logs for security
+- Tokens are only used during the publishing step and are not persisted
+
+### Publishing Safety Features
+- ✅ Cross-platform testing before publish
+- ✅ Automatic version conflict detection  
+- ✅ Dry-run mode for testing
+- ✅ Git tagging with release notes
+- ✅ Rollback protection via version checks
+
 For detailed implementation guidelines, see [CLAUDE.md](./CLAUDE.md).

@@ -13,7 +13,7 @@ export default defineConfig({
       name: "remove-shebang",
       transform(code, id) {
         // Skip non-JavaScript files for performance
-        if (id && !id.endsWith('.js')) {
+        if (id && !id.endsWith(".js")) {
           return code;
         }
         return removeShebang(code);

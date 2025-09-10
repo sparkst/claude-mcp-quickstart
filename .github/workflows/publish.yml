@@ -1,0 +1,307 @@
+name: NPM Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor  
+        - major
+      registry:
+        description: 'Publishing registry'
+        required: true
+        default: 'npm'
+        type: choice
+        options:
+        - npm
+        - github
+      dry_run:
+        description: 'Dry run (test without publishing)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    # Note: Full cross-platform matrix (3 OS × 2 Node versions) is already tested in CI
+    # For publishing, we only need one stable environment to validate quality
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Verify Script Syntax
+      run: node -c index.js
+    
+    - name: Run tests
+      run: npm run test:run
+    
+    - name: Check code formatting
+      run: npm run format:check
+    
+    - name: Run linting
+      run: npm run lint
+    
+    - name: Test package creation
+      run: npm pack
+    
+    - name: Test global install
+      shell: bash
+      run: |
+        PACKAGE_NAME=$(node -p "require('./package.json').name")
+        npm install -g ./${PACKAGE_NAME}-*.tgz
+        claude-mcp-quickstart --version
+
+  publish:
+    name: Publish Package
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    - name: Setup Node.js for NPM
+      if: inputs.registry == 'npm'
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        registry-url: 'https://registry.npmjs.org/'
+        cache: 'npm'
+    
+    - name: Setup Node.js for GitHub Packages
+      if: inputs.registry == 'github'
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        registry-url: 'https://npm.pkg.github.com/'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Extract package info
+      id: package
+      run: |
+        PACKAGE_NAME=$(node -p "require('./package.json').name")
+        CURRENT_VERSION=$(node -p "require('./package.json').version")
+        echo "name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+        echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Configure Git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    
+    - name: Calculate new version
+      id: new_version
+      run: |
+        CURRENT_VERSION="${{ steps.package.outputs.current_version }}"
+        # Calculate what the new version would be without modifying package.json yet
+        case "${{ inputs.version_type }}" in
+          "major")
+            NEW_VERSION=$(node -e "const v='$CURRENT_VERSION'.split('.'); console.log((parseInt(v[0])+1)+'.0.0')")
+            ;;
+          "minor")
+            NEW_VERSION=$(node -e "const v='$CURRENT_VERSION'.split('.'); console.log(v[0]+'.'+(parseInt(v[1])+1)+'.0')")
+            ;;
+          "patch")
+            NEW_VERSION=$(node -e "const v='$CURRENT_VERSION'.split('.'); console.log(v[0]+'.'+v[1]+'.'+(parseInt(v[2])+1))")
+            ;;
+        esac
+        echo "old_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "Would bump version from $CURRENT_VERSION to $NEW_VERSION"
+    
+    - name: Check if version already published (NPM)
+      if: inputs.registry == 'npm' && !inputs.dry_run
+      id: npm_check
+      run: |
+        PACKAGE_NAME="${{ steps.package.outputs.name }}"
+        NEW_VERSION="${{ steps.new_version.outputs.new_version }}"
+        if npm view "${PACKAGE_NAME}@${NEW_VERSION}" version 2>/dev/null; then
+          echo "version_exists=true" >> $GITHUB_OUTPUT
+          echo "Version $NEW_VERSION already exists on NPM"
+        else
+          echo "version_exists=false" >> $GITHUB_OUTPUT
+          echo "Version $NEW_VERSION is new on NPM"
+        fi
+    
+    - name: Check if version already published (GitHub)
+      if: inputs.registry == 'github' && !inputs.dry_run
+      id: github_check
+      run: |
+        PACKAGE_NAME="${{ steps.package.outputs.name }}"
+        NEW_VERSION="${{ steps.new_version.outputs.new_version }}"
+        # For GitHub Packages, package name should be scoped to the org
+        GITHUB_PACKAGE_NAME="@${{ github.repository_owner }}/${PACKAGE_NAME}"
+        if npm view "${GITHUB_PACKAGE_NAME}@${NEW_VERSION}" --registry=https://npm.pkg.github.com/ version 2>/dev/null; then
+          echo "version_exists=true" >> $GITHUB_OUTPUT
+          echo "Version $NEW_VERSION already exists on GitHub Packages"
+        else
+          echo "version_exists=false" >> $GITHUB_OUTPUT
+          echo "Version $NEW_VERSION is new on GitHub Packages"
+        fi
+    
+    - name: Determine publishing eligibility
+      if: "!inputs.dry_run"
+      id: should_publish
+      run: |
+        if [[ "${{ steps.npm_check.outputs.version_exists }}" == "true" || "${{ steps.github_check.outputs.version_exists }}" == "true" ]]; then
+          echo "should_publish=false" >> $GITHUB_OUTPUT
+          echo "Version already exists, will skip publishing"
+        else
+          echo "should_publish=true" >> $GITHUB_OUTPUT
+          echo "Version is new, will proceed with publishing"
+        fi
+    
+    - name: Bump version for publishing
+      if: steps.should_publish.outputs.should_publish == 'true'
+      id: version_bump
+      run: |
+        OLD_VERSION="${{ steps.new_version.outputs.old_version }}"
+        NEW_VERSION="${{ steps.new_version.outputs.new_version }}"
+        npm version "$NEW_VERSION" --no-git-tag-version
+        echo "Version bumped from $OLD_VERSION to $NEW_VERSION"
+        echo "bumped=true" >> $GITHUB_OUTPUT
+    
+    - name: Dry run publish (NPM)
+      if: inputs.dry_run && inputs.registry == 'npm'
+      run: |
+        echo "🧪 DRY RUN: Would publish version ${{ steps.new_version.outputs.new_version }} to NPM"
+        npm publish --dry-run --access public
+    
+    - name: Dry run publish (GitHub)
+      if: inputs.dry_run && inputs.registry == 'github'
+      run: |
+        echo "🧪 DRY RUN: Would publish version ${{ steps.new_version.outputs.new_version }} to GitHub Packages"
+        npm publish --dry-run --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Publish to NPM
+      if: |
+        steps.should_publish.outputs.should_publish == 'true' && 
+        inputs.registry == 'npm'
+      run: |
+        echo "📦 Publishing version ${{ steps.new_version.outputs.new_version }} to NPM"
+        echo "::add-mask::${{ secrets.NPM_AUTH_TOKEN }}"
+        npm publish --access public
+        echo "publish_success=true" >> $GITHUB_ENV
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+    
+    - name: Publish to GitHub Packages
+      if: |
+        steps.should_publish.outputs.should_publish == 'true' && 
+        inputs.registry == 'github'
+      run: |
+        echo "📦 Publishing version ${{ steps.new_version.outputs.new_version }} to GitHub Packages"
+        npm publish --access public
+        echo "publish_success=true" >> $GITHUB_ENV
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Version already published
+      if: steps.should_publish.outputs.should_publish == 'false'
+      run: |
+        echo "::warning::Version ${{ steps.new_version.outputs.new_version }} already exists on ${{ inputs.registry }}, skipping publish"
+        echo "This is not an error - the version has already been published successfully."
+        echo "publish_skipped=true" >> $GITHUB_ENV
+    
+    - name: Create and push git tag
+      if: env.publish_success == 'true'
+      run: |
+        NEW_VERSION="${{ steps.new_version.outputs.new_version }}"
+        git add package.json
+        git commit -m "chore: bump version to $NEW_VERSION"
+        git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+        git push origin main
+        git push origin "v$NEW_VERSION"
+    
+    - name: Create GitHub Release
+      if: env.publish_success == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        NEW_VERSION="${{ steps.new_version.outputs.new_version }}"
+        gh release create "v$NEW_VERSION" \
+          --title "Release v$NEW_VERSION" \
+          --notes "Automated release of version $NEW_VERSION" \
+          --generate-notes
+    
+    - name: Publish Summary
+      run: |
+        echo "## 📦 Publish Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Package**: ${{ steps.package.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Previous Version**: ${{ steps.new_version.outputs.old_version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Target Version**: ${{ steps.new_version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Registry**: ${{ inputs.registry }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Dry Run**: ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ inputs.dry_run }}" = "true" ]; then
+          echo "- **Status**: 🧪 Dry run completed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "Run the workflow again with dry_run=false to publish for real." >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ env.publish_skipped }}" = "true" ]; then
+          echo "- **Status**: ⏭️ Version already published (skipped)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Installation" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.registry }}" = "npm" ]; then
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "npm install -g ${{ steps.package.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "npm install -g @${{ github.repository_owner }}/${{ steps.package.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+        elif [ "${{ env.publish_success }}" = "true" ]; then
+          echo "- **Status**: ✅ Published successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- **Git Tag**: v${{ steps.new_version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎉 Success!" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.registry }}" = "npm" ]; then
+            echo "- **NPM Package**: https://www.npmjs.com/package/${{ steps.package.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Installation" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "npm install -g ${{ steps.package.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **GitHub Package**: https://github.com/${{ github.repository }}/packages" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Installation" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "npm install -g @${{ github.repository_owner }}/${{ steps.package.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Documentation" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release Notes**: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.new_version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository**: https://github.com/${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+        fi
