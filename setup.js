@@ -6,6 +6,11 @@ import inquirer from "inquirer";
 import fs from "fs/promises";
 import path from "path";
 import os from "os";
+import { fileURLToPath } from "url";
+
+// Get package directory for template resolution
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Expert Mode Context
 const EXPERT_CONTEXT = {
@@ -503,7 +508,8 @@ async function copyDirectory(src, dest) {
 }
 
 async function readTemplate(templateName) {
-  const templatePath = path.join(process.cwd(), "templates", templateName);
+  // Use package directory instead of current working directory
+  const templatePath = path.join(__dirname, "templates", templateName);
   
   try {
     await fs.access(templatePath);
