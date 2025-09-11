@@ -228,6 +228,21 @@ You can now help me with:
 "Help me explore this codebase"
 \`\`\`
 
+## 🔗 Connection Confirmation (Optional)
+If you'd like to confirm this setup is working and provide status feedback, create this file:
+
+**File:** \`claude_brain_connected.json\`
+**Content:**
+\`\`\`json
+{
+  "status": "connected",
+  "timestamp": "${new Date().toISOString()}",
+  "mcp_servers_verified": [${mcpServers.map((s) => `"${s.name}"`).join(", ")}],
+  "workspace_loaded": true,
+  "next_steps": "Brief message about what the user can do next with their MCP setup"
+}
+\`\`\`
+
 Ready to build something amazing together! 🎉`;
 }
 

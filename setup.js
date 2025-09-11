@@ -7,6 +7,7 @@ import fs from "fs/promises";
 import path from "path";
 import os from "os";
 import { fileURLToPath } from "url";
+import initiateBrainConnection from "./brain-connection.js";
 
 // Get package directory for template resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -107,9 +108,10 @@ Evaluate every request:
 };
 
 async function setupQuickstart() {
-  console.log(chalk.cyan("\n🚀 Claude MCP Quickstart - Expert Edition\n"));
+  console.log(chalk.cyan("\n\n🚀 Setting up Claude MCP integration...\n"));
+  console.log(chalk.gray("Memory server will be configured automatically\n"));
 
-  const spinner = ora("Initializing setup...").start();
+  const spinner = ora("Loading configuration").start();
 
   try {
     // Get config path and load existing config
@@ -119,48 +121,43 @@ async function setupQuickstart() {
 
     spinner.succeed("Configuration loaded");
 
-    // Select features
+    // Select features with clean UX
     const { features } = await inquirer.prompt([
       {
         type: "checkbox",
         name: "features",
-        message: "Select MCP servers to configure:",
+        message: "Choose additional MCP servers:",
         choices: [
           {
-            name: "Memory (Required)",
-            value: "memory",
+            name: "Supabase Database",
+            value: "supabase",
             checked: true,
-            disabled: true,
           },
-          { name: "Supabase Database", value: "supabase", checked: true },
-          { name: "Brave Search", value: "brave", checked: false },
-          { name: "Tavily AI Search", value: "tavily", checked: false },
-          new inquirer.Separator(
-            chalk.yellow("\n── Deprecated (use Claude Settings instead) ──")
-          ),
           {
-            name: chalk.yellow(
-              "GitHub (deprecated - use Claude Settings → Connectors)"
-            ),
-            value: "github",
+            name: "Brave Search",
+            value: "brave",
             checked: false,
           },
           {
-            name: chalk.yellow(
-              "Filesystem (deprecated - use Claude Settings → Extensions)"
-            ),
-            value: "filesystem",
+            name: "Tavily AI Search",
+            value: "tavily",
             checked: false,
           },
         ],
+        pageSize: 10,
       },
     ]);
+
+    // Show selected servers
+    if (features.length > 0) {
+      console.log(chalk.green("\n✓ Selected:"), features.join(", "));
+    }
+    console.log(chalk.gray("✓ Memory (automatic)\n"));
 
     // Configure servers
     const servers = {};
 
-    // Always add memory
-
+    // Always add memory (automatic)
     servers.memory = {
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-memory"],
@@ -169,18 +166,25 @@ async function setupQuickstart() {
     // Add Supabase if selected
     if (features.includes("supabase")) {
       const existingToken = getExistingToken(existingConfig, "supabase");
-      let promptMessage =
-        "Supabase Access Token (from https://supabase.com/dashboard/account/tokens):";
 
+      console.log(chalk.cyan("\n⚙️  Supabase Database Setup"));
+      console.log(
+        chalk.gray(
+          "Get your token from: https://supabase.com/dashboard/account/tokens\n"
+        )
+      );
+
+      let message = "Enter your Supabase Access Token:";
       if (existingToken) {
-        promptMessage = `Supabase Access Token [Current: ${maskToken(existingToken)}] (Enter to keep, "-" to delete, or paste new):`;
+        console.log(chalk.green("✓ Current token:"), maskToken(existingToken));
+        message = "Update token (Enter to keep current, '-' to remove):";
       }
 
       const { supabaseAccessToken } = await inquirer.prompt([
         {
           type: "password",
           name: "supabaseAccessToken",
-          message: promptMessage,
+          message: message,
           default: "",
         },
       ]);
@@ -211,113 +215,28 @@ async function setupQuickstart() {
       }
     }
 
-    // Handle deprecated servers with warnings
-    if (features.includes("github")) {
-      spinner.stop();
-      console.log(chalk.yellow("\n⚠️  GitHub MCP Server is deprecated!"));
-      console.log(
-        chalk.cyan(
-          "Recommended: Use Claude Settings → Connectors → GitHub instead"
-        )
-      );
-      console.log(
-        chalk.gray("This provides better performance and native integration.\n")
-      );
-
-      const { proceedWithGitHub } = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "proceedWithGitHub",
-          message: "Continue with deprecated GitHub MCP server anyway?",
-          default: false,
-        },
-      ]);
-
-      if (proceedWithGitHub) {
-        const existingToken = getExistingToken(existingConfig, "github");
-        let promptMessage = "GitHub Personal Access Token:";
-
-        if (existingToken) {
-          promptMessage = `GitHub Token [Current: ${maskToken(existingToken)}] (Enter to keep, "-" to delete, or paste new):`;
-        }
-
-        const { githubToken } = await inquirer.prompt([
-          {
-            type: "password",
-            name: "githubToken",
-            message: promptMessage,
-            mask: "*",
-          },
-        ]);
-
-        if (githubToken && githubToken !== "-") {
-          servers.github = {
-            command: "npx",
-            args: ["-y", "@modelcontextprotocol/server-github"],
-            env: { GITHUB_TOKEN: githubToken },
-          };
-        }
-      }
-      spinner.start();
-    }
-
-    if (features.includes("filesystem")) {
-      spinner.stop();
-      console.log(chalk.yellow("\n⚠️  Filesystem MCP Server is deprecated!"));
-      console.log(
-        chalk.cyan(
-          "Recommended: Use Claude Settings → Extensions → Filesystem instead"
-        )
-      );
-      console.log(
-        chalk.gray("This provides better security and file access control.\n")
-      );
-
-      const { proceedWithFilesystem } = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "proceedWithFilesystem",
-          message: "Continue with deprecated Filesystem MCP server anyway?",
-          default: false,
-        },
-      ]);
-
-      if (proceedWithFilesystem) {
-        const { allowedDirectories } = await inquirer.prompt([
-          {
-            type: "input",
-            name: "allowedDirectories",
-            message: "Allowed directories (comma-separated):",
-            default: process.cwd(),
-          },
-        ]);
-
-        servers.filesystem = {
-          command: "npx",
-          args: [
-            "-y",
-            "@modelcontextprotocol/server-filesystem",
-            ...allowedDirectories.split(",").map((dir) => dir.trim()),
-          ],
-        };
-      }
-      spinner.start();
-    }
-
     // Add Brave if selected
     if (features.includes("brave")) {
       const existingToken = getExistingToken(existingConfig, "brave");
-      let promptMessage = "Brave Search API Key:";
 
+      console.log(chalk.cyan("\n🔍 Brave Search Setup"));
+      console.log(
+        chalk.gray(
+          "Get your API key from: https://api.search.brave.com/app/keys\n"
+        )
+      );
+
+      let message = "Enter your Brave Search API Key:";
       if (existingToken) {
-        promptMessage = `Brave Search API Key [Current: ${maskToken(existingToken)}] (Enter to keep, "-" to delete, or paste new):`;
+        console.log(chalk.green("✓ Current key:"), maskToken(existingToken));
+        message = "Update key (Enter to keep current, '-' to remove):";
       }
 
       const { braveKey } = await inquirer.prompt([
         {
           type: "password",
           name: "braveKey",
-          message: promptMessage,
+          message: message,
           default: "",
         },
       ]);
@@ -345,17 +264,23 @@ async function setupQuickstart() {
     // Add Tavily if selected
     if (features.includes("tavily")) {
       const existingToken = getExistingToken(existingConfig, "tavily");
-      let promptMessage = "Tavily API Key:";
 
+      console.log(chalk.cyan("\n🔎 Tavily AI Search Setup"));
+      console.log(
+        chalk.gray("Get your API key from: https://app.tavily.com/keys\n")
+      );
+
+      let message = "Enter your Tavily API Key:";
       if (existingToken) {
-        promptMessage = `Tavily API Key [Current: ${maskToken(existingToken)}] (Enter to keep, "-" to delete, or paste new):`;
+        console.log(chalk.green("✓ Current key:"), maskToken(existingToken));
+        message = "Update key (Enter to keep current, '-' to remove):";
       }
 
       const { tavilyKey } = await inquirer.prompt([
         {
           type: "password",
           name: "tavilyKey",
-          message: promptMessage,
+          message: message,
           default: "",
         },
       ]);
@@ -494,38 +419,14 @@ async function setupQuickstart() {
       );
     }
 
-    console.log(chalk.green("\n✅ Setup complete!\n"));
+    console.log(chalk.green("\n✅ MCP servers configured!\n"));
 
-    // Show Claude Settings guidance
-    console.log(
-      chalk.cyan("🔗 For enhanced capabilities, configure in Claude Settings:")
-    );
-    console.log(chalk.gray("   Connectors:"));
-    console.log(
-      chalk.gray(
-        "   • GitHub - Native GitHub integration with better performance"
-      )
-    );
-    console.log(
-      chalk.gray("   • Cloudflare Developer Platform - Deploy and manage apps")
-    );
-    console.log(chalk.gray("   Extensions:"));
-    console.log(
-      chalk.gray(
-        "   • Filesystem - Secure file access (specify your project directories)"
-      )
-    );
-    console.log(
-      chalk.gray("   • Context7 - Documentation lookup and code examples\n")
-    );
+    // Initiate brain connection flow
+    const configuredServers = Object.keys(servers);
+    const projectPath = process.cwd();
+    const projectType = "Node.js"; // Could be enhanced to detect project type
 
-    console.log(chalk.yellow("Next steps:"));
-    console.log("1. Restart Claude Desktop");
-    console.log(
-      '2. Run "claude-mcp-quickstart dev-mode" to generate integration prompt'
-    );
-    console.log("3. Configure Claude Settings for additional capabilities");
-    console.log("4. Start building\n");
+    await initiateBrainConnection(projectPath, configuredServers, projectType);
   } catch (error) {
     spinner.fail("Setup failed");
     console.error(chalk.red(error.message));

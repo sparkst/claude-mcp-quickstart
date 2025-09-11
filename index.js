@@ -7,9 +7,11 @@ import path from "path";
 import os from "os";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { createRequire } from "module";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const require = createRequire(import.meta.url);
+const packageJson = require("./package.json");
 
 // Import commands
 import setupQuickstart from "./setup.js";
@@ -20,7 +22,7 @@ console.log(
   chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                  Claude MCP Quickstart                     ║
-║                    Expert Edition v2.0                     ║
+║                    Expert Edition v${packageJson.version}                   ║
 ╚═══════════════════════════════════════════════════════════╝
 `)
 );

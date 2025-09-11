@@ -33,7 +33,7 @@ npx claude-mcp-quickstart
 ### Development Setup
 ```bash
 npm install
-npm test              # Run all tests (47 tests)
+npm test              # Run all tests (134 tests)
 npm run typecheck     # TypeScript validation
 ```
 
@@ -48,11 +48,15 @@ npm run typecheck     # TypeScript validation
 ### MCP Server Support  
 - **Memory**: Conversation memory persistence (core server)
 - **Supabase**: Database operations with access tokens
-- **Context7**: Documentation lookup (local/remote)
 - **Brave Search**: Web search capabilities
 - **Tavily AI**: AI-optimized search
 
-**Note**: GitHub and Filesystem servers removed as Claude now has built-in connectors that provide better integration.
+### Deprecated MCP Servers (Graceful Migration)
+- **GitHub**: ⚠️ Deprecated - Use Claude Settings → Connectors → GitHub instead
+- **Filesystem**: ⚠️ Deprecated - Use Claude Settings → Extensions → Filesystem instead
+- **Context7**: ⚠️ Removed - Use Claude Settings → Extensions for documentation features
+
+**Migration Benefits**: Claude's native connectors and extensions provide better performance, security, and integration compared to external MCP servers.
 
 ### Workspace Creation
 - **Lovable.dev Integration**: Full-stack development templates
@@ -79,7 +83,7 @@ claude-mcp-quickstart/
 │   ├── prompt-library.md
 │   ├── lovable-patterns.md
 │   └── project-templates/
-├── *.spec.js          # Test files (94 tests)
+├── *.spec.js          # Test files (134 tests)
 ├── vitest.config.js   # Test configuration & Windows compatibility  
 ├── .prettierrc        # Code formatting rules
 └── eslint.config.js   # Code linting configuration
@@ -96,9 +100,10 @@ The refactored version introduces a streamlined development workflow:
 ### Why This Change?
 
 - **Built-in Connectors**: Claude now provides native GitHub and filesystem connectors that work better than external MCP servers
-- **Better Context**: The dev-mode tool generates comprehensive workspace context instead of simple activation
-- **First-time Experience**: New users get a complete integration prompt telling Claude where to look and what to save
-- **Reduced Confusion**: Eliminates manual dev-mode activation steps
+- **Enhanced Security**: Native extensions offer improved access control and security models  
+- **Better Performance**: Native connectors eliminate external process overhead and provide faster response times
+- **Simplified Setup**: Fewer external dependencies to manage, configure, and troubleshoot
+- **Future-Proof**: Migration path ensures compatibility with Claude's evolving feature set
 
 ### Dev-Mode Tool Features
 
@@ -126,16 +131,45 @@ The tool generates a comprehensive prompt that tells Claude:
 
 If you're upgrading from a previous version:
 
-1. **Update Configuration**: Run `claude-mcp-quickstart setup` to update your MCP configuration (GitHub/Filesystem servers will be automatically removed)
-2. **New Workflow**: Use `claude-mcp-quickstart dev-mode` in your project directories instead of manual activation
-3. **Native Connectors**: Access GitHub and filesystem features through Claude's built-in connectors instead of MCP servers
+1. **Graceful Deprecation**: When running `claude-mcp-quickstart setup`, deprecated servers (GitHub/Filesystem) will show confirmation prompts
+2. **Choose Your Path**: You can continue using deprecated servers (discouraged) or migrate to Claude Settings
+3. **Recommended Migration**: 
+   - **GitHub**: Go to Claude Settings → Connectors → GitHub for better performance and native integration
+   - **Filesystem**: Go to Claude Settings → Extensions → Filesystem for improved security and file access control
+   - **Context7**: Go to Claude Settings → Extensions for documentation and context features
+4. **No Forced Changes**: Existing configurations remain functional while you decide when to migrate
+
+## Deprecation Approach
+
+This package implements a **graceful deprecation strategy** that prioritizes user choice and backward compatibility:
+
+### What You'll See
+- **⚠️ Deprecation Warnings**: Clear messages explaining why native alternatives are better
+- **Confirmation Prompts**: Choose whether to proceed with deprecated servers or migrate
+- **Migration Guidance**: Step-by-step instructions for using Claude Settings
+- **Performance Benefits**: Explanations of why native connectors are superior
+
+### No Breaking Changes
+- **Existing configurations preserved** - your current setup continues working
+- **Optional migration** - upgrade when you're ready, not when we force it
+- **Clear benefits explained** - understand why migration improves your experience
+
+### Example Experience
+```bash
+⚠️  GitHub MCP Server is deprecated!
+Recommended: Use Claude Settings → Connectors → GitHub instead
+This provides better performance and native integration.
+
+? Continue with deprecated GitHub MCP server anyway? (y/N)
+```
 
 ## Security Features
-- Token memory clearing after use
-- Input validation with regex patterns  
-- Atomic configuration file writes
-- JSON parsing with error recovery
-- Comprehensive test coverage preventing regressions
+- **Token Security**: Memory clearing after use and masked display during input
+- **Input Validation**: Regex patterns for GitHub, Supabase, Brave, and Tavily tokens  
+- **Deprecation Safety**: Confirmation prompts before proceeding with deprecated servers
+- **Configuration Protection**: Atomic file writes and JSON parsing with error recovery
+- **Migration Security**: Existing tokens preserved during configuration updates
+- **Comprehensive Testing**: 134 tests covering security patterns and deprecation flows
 
 ## Development
 
@@ -163,7 +197,7 @@ Windows compatibility is ensured through a custom Vite plugin that handles sheba
 ### Code Quality
 - **Prettier** for consistent formatting
 - **ESLint** for code quality
-- **94 comprehensive tests** covering core functionality
+- **134 comprehensive tests** covering core functionality, deprecation patterns, and security flows
 - **Vitest** for fast, modern testing
 
 ### Troubleshooting CI Issues

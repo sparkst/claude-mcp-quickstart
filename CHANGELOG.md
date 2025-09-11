@@ -7,42 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- **BREAKING**: Removed GitHub and Filesystem MCP servers from setup configuration
-- **BREAKING**: Completely repurposed `dev-mode.js` to generate Claude integration prompts instead of simple dev mode activation
-- Updated package.json to remove redundant MCP dependencies (`@modelcontextprotocol/server-filesystem` and `@modelcontextprotocol/server-github`)
-- Updated setup.js to remove GitHub/filesystem configuration options
-
 ### Added
-- Automatic project type detection in dev-mode (React, Next.js, Vue, Python, Rust, Go, etc.)
-- Comprehensive Claude integration prompt generation with workspace context
-- `.claude-context` and `.claude-integration.md` file generation for workspace persistence
-- MCP server information detection and display in integration prompts
-- Directory structure analysis for better workspace context
+- **Graceful Deprecation System**: Confirmation prompts for GitHub and Filesystem MCP servers with clear migration guidance
+- **Claude Settings Integration**: Comprehensive guidance directing users to Claude's native Connectors (GitHub, Cloudflare) and Extensions (Filesystem)
+- **Enhanced Test Coverage**: 30 new tests covering deprecation patterns, security, and integration flows (134 total tests)
+- **Backward Compatibility**: Deprecated servers remain functional for existing users while discouraging new adoption
+- **Migration Messaging**: Clear explanations of why native alternatives are superior
 
-### Removed
-- GitHub MCP server configuration (Claude has built-in GitHub connector)
-- Filesystem MCP server configuration (Claude has built-in filesystem connector) 
-- Manual dev-mode activation workflow
-- Redundant MCP server dependencies from package.json
+### Changed
+- **GitHub MCP Server**: Now deprecated with confirmation prompt directing users to Claude Settings → Connectors → GitHub
+- **Filesystem MCP Server**: Now deprecated with confirmation prompt directing users to Claude Settings → Extensions → Filesystem  
+- **Context7 MCP Server**: Removed from setup choices, users directed to Claude Settings → Extensions
+- **Dev-Mode Integration**: Updated to include Claude Settings guidance for enhanced capabilities
+- **Package Dependencies**: Removed @upstash/context7-mcp dependency
+
+### Deprecated
+- **GitHub MCP Server**: Use Claude Settings → Connectors → GitHub for better performance and native integration
+- **Filesystem MCP Server**: Use Claude Settings → Extensions → Filesystem for improved security and file access control
+- **Context7 MCP Server**: Use Claude Settings → Extensions for documentation and context features
+
+### Security
+- **Token Validation**: Enhanced security patterns for deprecated server configurations
+- **Confirmation Flows**: User must explicitly confirm before proceeding with deprecated options
+- **Migration Safety**: Existing configurations preserved while guiding toward better alternatives
 
 ### Why These Changes?
 
-**Client Feedback Addressed:**
-- Claude now has built-in GitHub and filesystem connectors that work better than external MCP servers
-- Dev-mode confusion eliminated by providing clear integration prompts instead of activation
-- First-time use experience improved with comprehensive workspace setup guidance
+**Enhanced User Experience:**
+- **Native Integration**: Claude's built-in connectors provide superior performance and capabilities
+- **Simplified Setup**: Fewer external dependencies to manage and configure
+- **Better Security**: Native extensions offer improved access control and security models
+- **Future-Proof**: Migration path ensures compatibility with Claude's evolving feature set
 
-**Benefits:**
-- **Reduced Setup Complexity**: Fewer MCP servers to configure and maintain
-- **Better Integration**: Native Claude connectors provide superior functionality
-- **Clearer Workflow**: Generated prompts tell Claude exactly what to do and where to look
-- **Persistent Context**: Files are saved for future reference and sessions
+**Graceful Transition Strategy:**
+- **No Breaking Changes**: Existing users retain functionality while being informed of better options
+- **Clear Guidance**: Step-by-step migration instructions with specific Claude Settings paths
+- **Progressive Adoption**: Users can migrate at their own pace without forced upgrades
 
-**Migration Guide:**
-- Existing users should run `claude-mcp-quickstart setup` to update their configuration
-- Use `claude-mcp-quickstart dev-mode` in your project directory to generate integration prompts
-- Copy the generated prompt and paste it to Claude to establish workspace context
+**Technical Benefits:**
+- **Reduced Complexity**: Fewer MCP servers to maintain and troubleshoot
+- **Better Performance**: Native connectors eliminate external process overhead
+- **Improved Reliability**: Built-in features are more stable and actively maintained by Anthropic
 
 ## [2.2.9] - 2024-09-10
 

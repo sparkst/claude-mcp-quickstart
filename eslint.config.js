@@ -14,6 +14,10 @@ export default [
         __filename: "readonly",
         global: "readonly",
         require: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
       },
     },
     rules: {
