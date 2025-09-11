@@ -2,9 +2,7 @@ import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "fs/promises";
 import path from "path";
 import { dir as tmpdir } from "tmp-promise";
-import {
-  generateServerConfig,
-} from "./setup.js";
+import { generateServerConfig } from "./setup.js";
 
 // Mock external dependencies
 vi.mock("chalk", () => ({

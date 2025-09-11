@@ -32,7 +32,6 @@
     "@brave/brave-search-mcp-server": "latest",
     "@modelcontextprotocol/server-memory": "latest",
     "@supabase/mcp-server-supabase": "latest",
-    "@upstash/context7-mcp": "latest",
     "chalk": "^5.3.0",
     "commander": "^11.0.0",
     "inquirer": "^9.2.12",

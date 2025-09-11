@@ -103,9 +103,14 @@ async function getMCPServerInfo(configPath) {
         "Save and recall project context, decisions, and important information",
       "brave-search":
         "Search the web for current information and documentation",
-      context7: "Look up documentation for libraries and frameworks",
+      context7:
+        "Look up documentation for libraries and frameworks (deprecated - use Claude Settings → Extensions)",
       tavily: "Research and analyze topics with AI-powered search",
       supabase: "Interact with Supabase databases and APIs",
+      github:
+        "GitHub integration (deprecated - use Claude Settings → Connectors → GitHub)",
+      filesystem:
+        "File system access (deprecated - use Claude Settings → Extensions → Filesystem)",
     };
 
     return Object.keys(servers).map((name) => ({
@@ -205,6 +210,15 @@ You can now help me with:
 - **Research**: "Find best practices for ${projectType} development"
 - **Problem solving**: "Help me debug this issue"
 - **Documentation**: "Look up how to use [library]"
+
+## 🔗 Enhanced Capabilities (Configure in Claude Settings)
+**Connectors:**
+- **GitHub**: Native GitHub integration with better performance
+- **Cloudflare Developer Platform**: Deploy and manage applications
+
+**Extensions:**
+- **Filesystem**: Secure file access (specify your project directories)
+- **Context7**: Documentation lookup and code examples
 
 ## 📋 Quick Start Commands
 \`\`\`

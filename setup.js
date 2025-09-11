@@ -133,9 +133,25 @@ async function setupQuickstart() {
             disabled: true,
           },
           { name: "Supabase Database", value: "supabase", checked: true },
-          { name: "Context7 Docs", value: "context7", checked: true },
           { name: "Brave Search", value: "brave", checked: false },
           { name: "Tavily AI Search", value: "tavily", checked: false },
+          new inquirer.Separator(
+            chalk.yellow("\n── Deprecated (use Claude Settings instead) ──")
+          ),
+          {
+            name: chalk.yellow(
+              "GitHub (deprecated - use Claude Settings → Connectors)"
+            ),
+            value: "github",
+            checked: false,
+          },
+          {
+            name: chalk.yellow(
+              "Filesystem (deprecated - use Claude Settings → Extensions)"
+            ),
+            value: "filesystem",
+            checked: false,
+          },
         ],
       },
     ]);
@@ -195,46 +211,97 @@ async function setupQuickstart() {
       }
     }
 
-    // Add Context7 if selected
-    if (features.includes("context7")) {
-      const { context7Setup } = await inquirer.prompt([
+    // Handle deprecated servers with warnings
+    if (features.includes("github")) {
+      spinner.stop();
+      console.log(chalk.yellow("\n⚠️  GitHub MCP Server is deprecated!"));
+      console.log(
+        chalk.cyan(
+          "Recommended: Use Claude Settings → Connectors → GitHub instead"
+        )
+      );
+      console.log(
+        chalk.gray("This provides better performance and native integration.\n")
+      );
+
+      const { proceedWithGitHub } = await inquirer.prompt([
         {
-          type: "list",
-          name: "context7Setup",
-          message: "Context7 setup method:",
-          choices: [
-            {
-              name: "Remote (recommended - no API key needed)",
-              value: "remote",
-            },
-            { name: "Local (requires API key)", value: "local" },
-            { name: "Skip", value: "skip" },
-          ],
+          type: "confirm",
+          name: "proceedWithGitHub",
+          message: "Continue with deprecated GitHub MCP server anyway?",
+          default: false,
         },
       ]);
 
-      if (context7Setup === "local") {
-        const { apiKey } = await inquirer.prompt([
+      if (proceedWithGitHub) {
+        const existingToken = getExistingToken(existingConfig, "github");
+        let promptMessage = "GitHub Personal Access Token:";
+
+        if (existingToken) {
+          promptMessage = `GitHub Token [Current: ${maskToken(existingToken)}] (Enter to keep, "-" to delete, or paste new):`;
+        }
+
+        const { githubToken } = await inquirer.prompt([
           {
             type: "password",
-            name: "apiKey",
-            message: "Context7 API Key:",
+            name: "githubToken",
+            message: promptMessage,
+            mask: "*",
           },
         ]);
 
-        if (apiKey) {
-          servers.context7 = {
+        if (githubToken && githubToken !== "-") {
+          servers.github = {
             command: "npx",
-            args: ["-y", "@upstash/context7-mcp", "--api-key", apiKey],
+            args: ["-y", "@modelcontextprotocol/server-github"],
+            env: { GITHUB_TOKEN: githubToken },
           };
         }
-      } else if (context7Setup === "remote") {
-        console.log(chalk.yellow("\nContext7 Remote Setup:"));
-        console.log("1. Open Claude Desktop");
-        console.log("2. Go to Settings > Connectors > Add Custom Connector");
-        console.log("3. Name: Context7");
-        console.log("4. URL: https://mcp.context7.com/mcp\n");
       }
+      spinner.start();
+    }
+
+    if (features.includes("filesystem")) {
+      spinner.stop();
+      console.log(chalk.yellow("\n⚠️  Filesystem MCP Server is deprecated!"));
+      console.log(
+        chalk.cyan(
+          "Recommended: Use Claude Settings → Extensions → Filesystem instead"
+        )
+      );
+      console.log(
+        chalk.gray("This provides better security and file access control.\n")
+      );
+
+      const { proceedWithFilesystem } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "proceedWithFilesystem",
+          message: "Continue with deprecated Filesystem MCP server anyway?",
+          default: false,
+        },
+      ]);
+
+      if (proceedWithFilesystem) {
+        const { allowedDirectories } = await inquirer.prompt([
+          {
+            type: "input",
+            name: "allowedDirectories",
+            message: "Allowed directories (comma-separated):",
+            default: process.cwd(),
+          },
+        ]);
+
+        servers.filesystem = {
+          command: "npx",
+          args: [
+            "-y",
+            "@modelcontextprotocol/server-filesystem",
+            ...allowedDirectories.split(",").map((dir) => dir.trim()),
+          ],
+        };
+      }
+      spinner.start();
     }
 
     // Add Brave if selected
@@ -428,10 +495,37 @@ async function setupQuickstart() {
     }
 
     console.log(chalk.green("\n✅ Setup complete!\n"));
+
+    // Show Claude Settings guidance
+    console.log(
+      chalk.cyan("🔗 For enhanced capabilities, configure in Claude Settings:")
+    );
+    console.log(chalk.gray("   Connectors:"));
+    console.log(
+      chalk.gray(
+        "   • GitHub - Native GitHub integration with better performance"
+      )
+    );
+    console.log(
+      chalk.gray("   • Cloudflare Developer Platform - Deploy and manage apps")
+    );
+    console.log(chalk.gray("   Extensions:"));
+    console.log(
+      chalk.gray(
+        "   • Filesystem - Secure file access (specify your project directories)"
+      )
+    );
+    console.log(
+      chalk.gray("   • Context7 - Documentation lookup and code examples\n")
+    );
+
     console.log(chalk.yellow("Next steps:"));
     console.log("1. Restart Claude Desktop");
-    console.log('2. Say "Dev Mode" to activate');
-    console.log("3. Start building\n");
+    console.log(
+      '2. Run "claude-mcp-quickstart dev-mode" to generate integration prompt'
+    );
+    console.log("3. Configure Claude Settings for additional capabilities");
+    console.log("4. Start building\n");
   } catch (error) {
     spinner.fail("Setup failed");
     console.error(chalk.red(error.message));
