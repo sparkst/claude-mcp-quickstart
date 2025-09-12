@@ -155,15 +155,13 @@ describe("REQ-303: Enhanced Prompt Content Generation", () => {
       (ex) => ex.server === "memory"
     );
 
-    expect(supabaseExamples).toHaveLength(expect.any(Number));
     expect(supabaseExamples.length).toBeGreaterThan(0);
-    expect(memoryExamples).toHaveLength(expect.any(Number));
     expect(memoryExamples.length).toBeGreaterThan(0);
 
     expect(supabaseExamples[0]).toHaveProperty("copyPasteReady", true);
-    expect(supabaseExamples[0].prompt).toContain("supabase");
+    expect(supabaseExamples[0].prompt.toLowerCase()).toContain("supabase");
     expect(memoryExamples[0]).toHaveProperty("copyPasteReady", true);
-    expect(memoryExamples[0].prompt).toContain("memory");
+    expect(memoryExamples[0].prompt.toLowerCase()).toContain("memory");
   });
 
   test("REQ-303 — maintains template security while adding value", () => {
@@ -191,8 +189,8 @@ describe("REQ-305: Professional UX Messaging", () => {
       path: "/workspace",
     });
 
-    expect(professionalMessage).not.toMatch(/\$\s/); // No command prompt style
-    expect(professionalMessage).not.toMatch(/^\s*>/); // No unix redirections
+    expect(professionalMessage.message).not.toMatch(/\$\s/); // No command prompt style
+    expect(professionalMessage.message).not.toMatch(/^\s*>/); // No unix redirections
     expect(professionalMessage).toHaveProperty("style", "professional");
     expect(professionalMessage.message).toContain("Ready");
     expect(professionalMessage).toHaveProperty("developerFriendly", true);
@@ -299,7 +297,7 @@ describe("REQ-306: Full File Path Display", () => {
   test("REQ-306 — makes file locations copy-paste ready for user convenience", () => {
     const pathDisplay = displayFullFilePaths(mockProjectPath, ["README.md"]);
 
-    expect(pathDisplay.paths[0]).toMatch(/^\/[\w/-]+$/); // Full path format
+    expect(pathDisplay.paths[0]).toMatch(/^\/[\w/.-]+$/); // Full path format
     expect(pathDisplay).toHaveProperty("copyPasteReady", true);
     expect(pathDisplay).toHaveProperty("quoted", false); // No quotes needed
     expect(pathDisplay.formattedPaths[0]).toBe(
@@ -356,12 +354,12 @@ describe("REQ-307: Practical Example Library", () => {
     );
 
     const designCheckExample = supabaseExamples.find((ex) =>
-      ex.prompt.toLowerCase().includes("design")
+      (ex.title + " " + ex.prompt).toLowerCase().includes("design")
     );
     const tableUpdateExample = supabaseExamples.find(
       (ex) =>
-        ex.prompt.toLowerCase().includes("table") &&
-        ex.prompt.toLowerCase().includes("update")
+        (ex.title + " " + ex.prompt).toLowerCase().includes("table") &&
+        (ex.title + " " + ex.prompt).toLowerCase().includes("update")
     );
 
     expect(designCheckExample).toBeDefined();

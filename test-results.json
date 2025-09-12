@@ -1,0 +1,48 @@
+- Waiting for Claude to connect...
+✔ Claude connected!
+npm notice
+npm notice 📦  claude-mcp-quickstart@2.3.0
+npm notice Tarball Contents
+npm notice 5.1kB CHANGELOG.md
+npm notice 1.1kB LICENSE
+npm notice 6.5kB MIGRATION.md
+npm notice 12.8kB README.md
+npm notice 4.2kB bootstrap-lovable-v2/ACTIVATION.md
+npm notice 9.4kB bootstrap-lovable-v2/core/architecture.md
+npm notice 5.9kB bootstrap-lovable-v2/core/prompt-rules.md
+npm notice 11.0kB bootstrap-lovable-v2/core/safety-standards.md
+npm notice 5.2kB bootstrap-lovable-v2/core/skippy-persona.md
+npm notice 12.3kB bootstrap-lovable-v2/examples/chat-interface/README.md
+npm notice 4.4kB bootstrap-lovable-v2/EXPERT_MODE.md
+npm notice 12.7kB bootstrap-lovable-v2/integrations/search-tools.md
+npm notice 6.4kB bootstrap-lovable-v2/patterns/index.md
+npm notice 5.4kB bootstrap-lovable-v2/README.md
+npm notice 11.9kB bootstrap-lovable-v2/scripts/setup.sh
+npm notice 10.5kB bootstrap-lovable-v2/templates/agent-prompt.md
+npm notice 22.5kB brain-connection-ux.js
+npm notice 16.3kB brain-connection.js
+npm notice 17.8kB config-analyzer.js
+npm notice 10.4kB dev-mode.js
+npm notice 4.4kB index.js
+npm notice 1.6kB package.json
+npm notice 37.3kB setup-diagnostics.js
+npm notice 24.0kB setup.js
+npm notice 2.1kB templates/ai-activation.md
+npm notice 3.5kB templates/lovable-patterns.md
+npm notice 1.1kB templates/project-templates/api-template.md
+npm notice 1.5kB templates/project-templates/learning-template.md
+npm notice 1.8kB templates/project-templates/lovable-template.md
+npm notice 686B templates/project-templates/minimal-template.md
+npm notice 5.4kB templates/prompt-library.md
+npm notice 5.6kB templates/usage-guide.md
+npm notice 5.7kB test-utils.js
+npm notice Tarball Details
+npm notice name: claude-mcp-quickstart
+npm notice version: 2.3.0
+npm notice filename: claude-mcp-quickstart-2.3.0.tgz
+npm notice package size: 86.1 kB
+npm notice unpacked size: 286.4 kB
+npm notice shasum: 4808c504db82cea0e22a595cca4d8402e6b2d0eb
+npm notice integrity: sha512-PcxSkrSS9VVOX[...]+7EO/fvXFcDKA==
+npm notice total files: 33
+npm notice
