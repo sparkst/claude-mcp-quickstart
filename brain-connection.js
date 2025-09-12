@@ -5,6 +5,12 @@ import ora from "ora";
 import fs from "fs/promises";
 import path from "path";
 import os from "os";
+import { verifyClaudeSetup } from "./setup-diagnostics.js";
+import {
+  generateEnhancedPromptContent,
+  generateSetupVerificationContent,
+  formatTroubleshootingGuidance,
+} from "./brain-connection-ux.js";
 
 /**
  * Escapes text for safe markdown rendering
@@ -35,6 +41,7 @@ function formatServerList(mcpServers) {
 /**
  * Creates the brain connection file with enhanced integration prompt
  * REQ-202: Creates connect_claude_brain.md file in current directory
+ * REQ-303: Enhanced Prompt Content Generation
  */
 export async function createBrainConnectionFile(
   projectPath,
@@ -46,9 +53,9 @@ export async function createBrainConnectionFile(
   // Escape all user inputs for safe markdown rendering
   const safePath = escapeMarkdown(projectPath);
   const safeType = escapeMarkdown(projectType);
-  const safeServers = Array.isArray(mcpServers)
-    ? mcpServers.filter((s) => typeof s === "string").map(escapeMarkdown)
-    : ["memory", "supabase"];
+  // const safeServers = Array.isArray(mcpServers)
+  //   ? mcpServers.filter((s) => typeof s === "string").map(escapeMarkdown)
+  //   : ["memory", "supabase"]; // Not used in enhanced version
   const serverList = formatServerList(mcpServers);
   const configPath = escapeMarkdown(
     path.join(
@@ -60,50 +67,158 @@ export async function createBrainConnectionFile(
     )
   );
 
+  // Verify setup and generate enhanced content
+  let setupVerification, enhancedContent;
+
+  try {
+    setupVerification = await verifyClaudeSetup(projectPath);
+    enhancedContent = generateEnhancedPromptContent(
+      projectPath,
+      mcpServers,
+      projectType,
+      setupVerification.analysis
+    );
+  } catch (error) {
+    // Fallback to basic content if verification fails
+    setupVerification = { success: false, error: error.message };
+    enhancedContent = {
+      practicalExamples: [],
+      mcpCapabilities: [],
+      setupCompleteness: 0,
+    };
+  }
+
+  const setupSection = generateSetupVerificationContent(setupVerification);
+  const troubleshootingSection = formatTroubleshootingGuidance(
+    setupVerification.troubleshooting || {}
+  );
+
+  // Generate setup verification section
+  let setupStatusContent = "";
+  if (setupSection.status === "success") {
+    setupStatusContent = `## ✅ Setup Verification Complete
+
+${setupSection.message}
+
+**Configuration Summary:**
+- 📁 Filesystem Access: ${setupSection.details.filesystemEnabled ? "✅ Enabled" : "❌ Not Enabled"}
+- 🏠 Workspace Configured: ${setupSection.details.workspaceConfigured ? "✅ Yes" : "❌ No"}  
+- 📂 Current Project Included: ${setupSection.details.projectIncluded ? "✅ Yes" : "❌ No"}
+- 🔧 Total MCP Servers: ${setupSection.details.totalServers}
+- 📚 Context7: ${setupSection.details.recommendedExtensions.context7 ? "✅ Enabled" : "⚠️ Recommended"}
+- 🐙 GitHub: ${setupSection.details.recommendedExtensions.github ? "✅ Enabled" : "⚠️ Recommended"}
+
+**Setup Completeness: ${enhancedContent.setupCompleteness}%**
+`;
+  } else if (setupSection.status === "issues") {
+    setupStatusContent = `## ⚠️ Setup Issues Detected
+
+${setupSection.message}
+
+**Issues Found:**
+${setupSection.issues
+  .map(
+    (issue) => `
+### ${issue.severity === "critical" ? "🚨" : "⚠️"} ${issue.title}
+${issue.description}
+
+**Resolution Steps:**
+${issue.resolution.map((step, i) => `${i + 1}. ${step}`).join("\n")}
+`
+  )
+  .join("\n")}
+`;
+  }
+
+  // Generate practical examples section
+  const practicalExamplesContent =
+    enhancedContent.practicalExamples.length > 0
+      ? `
+## 🚀 10 Things You Can Do Right Now
+
+${enhancedContent.practicalExamples
+  .map(
+    (example, i) => `
+### ${i + 1}. ${example.title}
+\`\`\`
+${example.prompt}
+\`\`\`
+`
+  )
+  .join("")}
+`
+      : "";
+
+  // Generate MCP capabilities section
+  const capabilitiesContent =
+    enhancedContent.mcpCapabilities.length > 0
+      ? `
+## ⚡ 10 New Capabilities Unlocked by MCP
+
+${enhancedContent.mcpCapabilities
+  .map(
+    (cap, i) => `
+### ${i + 1}. ${cap.title} ${cap.enabled ? "✅" : "❌"}
+${cap.description}
+
+**Before MCP:** ${cap.beforeMcp}
+**With MCP:** ${cap.withMcp}
+`
+  )
+  .join("")}
+
+**Capabilities Active: ${enhancedContent.enabledCapabilities}/${enhancedContent.totalCapabilities}**
+`
+      : "";
+
   const prompt = `# 🧠 Claude Brain Connection
 
-Hi Claude! Your MCP workspace is ready. Please confirm the setup and provide next steps guidance.
+Hi Claude! Your MCP workspace is ready. ${setupSection.status === "success" ? "Setup verification complete!" : "Please help resolve the setup issues below, then provide next steps guidance."}
 
 ## 📁 Workspace Context
 - **Project Directory**: \`${safePath}\`
 - **Project Type**: ${safeType}
 - **MCP Configuration**: \`${configPath}\`
 
-## 🛠️ Available MCP Tools
-${safeServers.map((server) => `- **${server}**: Configured and ready`).join("\n") || "- **memory**: Save and recall project context\n- **supabase**: Interact with databases and APIs"}
+${setupStatusContent}
 
-## 🧠 Please Save This Context
+## 🧠 Save This Context to Memory
 Use your memory to save:
 \`\`\`
 Primary workspace: ${safePath}
 Project type: ${safeType}
 Available MCP tools: ${serverList}
+Setup completeness: ${enhancedContent.setupCompleteness}%
 Context file: .claude-context (in project root)
+Last verified: ${new Date().toISOString()}
 \`\`\`
+${practicalExamplesContent}${capabilitiesContent}
+${
+  troubleshootingSection
+    ? `
+## 🔧 Troubleshooting Guidance
 
-## 🚀 Ready to Develop!
-You can now help with:
-- **Code analysis**: "Analyze the structure of this ${safeType} project"
-- **Research**: "Find best practices for ${safeType} development"
-- **Problem solving**: "Help me debug this issue"
-- **Documentation**: "Look up how to use [library]"
+${troubleshootingSection.summary}
 
-## 🔗 Enhanced Capabilities (Configure in Claude Settings)
-**Connectors:**
-- **GitHub**: Native GitHub integration with better performance
-- **Cloudflare Developer Platform**: Deploy and manage applications
+${
+  troubleshootingSection.steps
+    ?.map(
+      (step) => `
+### Step ${step.number}: ${step.title} (${step.severity})
+${step.description}
 
-**Extensions:**
-- **Filesystem**: Secure file access (specify your project directories)
-- **Context7**: Documentation lookup and code examples
+**Actions:**
+${step.actions.map((action, i) => `${i + 1}. ${action}`).join("\n")}
 
-## 📋 Quick Start Commands
-\`\`\`
-"Save this workspace context to memory"
-"Analyze my project structure" 
-"Search for ${safeType} best practices"
-"Help me explore this codebase"
-\`\`\`
+**Verification:**
+${step.verification?.map((verify, i) => `${i + 1}. ${verify}`).join("\n") || "Restart Claude Desktop and test functionality"}
+`
+    )
+    .join("") || ""
+}
+`
+    : ""
+}
 
 ## ⚠️ IMPORTANT: Confirm Connection
 When you've successfully loaded this workspace and verified your MCP tools are working, please create a status file to confirm the connection:
@@ -116,11 +231,12 @@ When you've successfully loaded this workspace and verified your MCP tools are w
   "timestamp": "${new Date().toISOString()}",
   "mcp_servers_verified": [${serverList}],
   "workspace_loaded": true,
-  "next_steps": "I've successfully connected to your MCP workspace! You can now ask me to analyze your project, search for documentation, save context to memory, or help with any development tasks. Your MCP servers are active and ready to enhance our collaboration."
+  "setup_completeness": ${enhancedContent.setupCompleteness},
+  "next_steps": "I've successfully connected to your MCP workspace! Based on your setup (${enhancedContent.setupCompleteness}% complete), I can help with ${enhancedContent.enabledCapabilities} enhanced capabilities. Try one of the 10 practical examples above to get started!"
 }
 \`\`\`
 
-Ready to build something amazing together! 🎉`;
+Ready to unlock the full potential of MCP-enhanced development! 🎉`;
 
   await fs.writeFile(filePath, prompt, "utf8");
   return filePath;
@@ -128,29 +244,27 @@ Ready to build something amazing together! 🎉`;
 
 /**
  * Displays the brain connection prompt on screen with premium UX copy
- * REQ-203: Displays prompt and enters waiting mode with spinner
+ * REQ-301: Streamlined Connection Output - Replace verbose output with clean messaging
+ * REQ-305: Professional UX Messaging - Replace unix-style output with professional messaging
+ * REQ-306: Full File Path Display - Show complete file paths instead of basenames
  */
 export function displayBrainConnectionPrompt(filePath) {
-  console.log(chalk.cyan("\n🧠 Ready to connect your Claude brain?\n"));
+  console.log(chalk.green("\n✅ MCP servers configured!"));
+  console.log(chalk.cyan("\n🧠 Claude brain connection ready\n"));
 
+  // REQ-306: Display full file path instead of basename
+  console.log(chalk.green("📄 Connection prompt:"), chalk.white(filePath));
+
+  console.log(chalk.cyan("\n🚀 Next steps:"));
+  console.log(chalk.gray(`   1. Open Claude Desktop or claude.ai`));
+  console.log(chalk.gray(`   2. Upload: ${filePath}`));
   console.log(
-    chalk.gray(
-      "Your MCP servers are configured and waiting. Let's bring Claude online!\n"
-    )
+    chalk.gray(`   3. Claude will verify setup and guide next steps`)
   );
 
   console.log(
-    chalk.green("📄 Connection prompt saved to:"),
-    path.basename(filePath)
+    chalk.dim("\n💡 File contains personalized setup verification and examples")
   );
-
-  console.log(chalk.cyan("\n🚀 Next: Open Claude and either:"));
-  console.log(chalk.gray("• Copy the prompt from the file"));
-  console.log(chalk.gray("• Upload connect_claude_brain.md directly\n"));
-
-  console.log(chalk.cyan("💡 Open Claude now for the smoothest experience!\n"));
-
-  console.log(chalk.gray("─".repeat(60)));
 }
 
 /**

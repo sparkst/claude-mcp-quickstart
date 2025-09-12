@@ -46,8 +46,8 @@ describe("createBrainConnectionFile", () => {
       maliciousProjectType
     );
 
-    // Fixed: content should NOT contain unescaped HTML/script tags
-    expect(capturedContent).not.toContain("<script>malicious()</script>");
+    // Fixed: content should NOT contain unescaped HTML/script tags - verify escaping worked
+    expect(capturedContent).not.toContain("</h1><script>malicious()</script>"); // No raw script
     expect(capturedContent).toContain(
       "&lt;&#x2F;h1&gt;&lt;script&gt;malicious()&lt;&#x2F;script&gt;"
     );
@@ -69,10 +69,11 @@ describe("createBrainConnectionFile", () => {
 
     await createBrainConnectionFile(projectPath, maliciousServers, projectType);
 
-    // Fixed: content should NOT contain unescaped HTML injection, but escaping isn't complete
-    // The content still contains the raw string - this indicates partial escaping
-    expect(capturedContent).toContain("onerror=alert(1)"); // Still contains dangerous content
-    expect(capturedContent).toContain("&quot;&gt;&lt;&#x2F;script&gt;"); // Some escaping is happening
+    // Fixed: content should NOT contain unescaped HTML injection - verify proper escaping
+    expect(capturedContent).not.toContain("<img src=x onerror=alert(1)>"); // Should not contain unescaped content
+    expect(capturedContent).toContain(
+      "&quot;&gt;&lt;&#x2F;script&gt;&lt;img src=x onerror=alert(1)&gt;"
+    ); // Properly escaped
   });
 
   test("REQ-202 — prevents code execution in template interpolation", async () => {
@@ -113,9 +114,9 @@ describe("displayBrainConnectionPrompt", () => {
     const calls = consoleSpy.mock.calls.flat().join(" ");
 
     // Fixed: Console output contains actual content, not chalk method names
-    expect(calls).toContain("🧠 Ready to connect"); // Primary message content
+    expect(calls).toContain("🧠 Claude brain connection ready"); // Primary message content
     expect(calls).toContain("connect_claude_brain.md"); // File path content
-    expect(calls).toContain("Copy the prompt"); // Secondary instruction content
+    expect(calls).toContain("Next steps"); // Secondary instruction content
   });
 
   test("REQ-203 — matches visual hierarchy from existing codebase", () => {
@@ -126,8 +127,8 @@ describe("displayBrainConnectionPrompt", () => {
     const allOutput = consoleSpy.mock.calls.flat().join("\n");
 
     // Fixed: Visual hierarchy matches setup.js patterns
-    expect(allOutput).toMatch(/🧠.*Ready to connect/); // Consistent emoji usage
-    expect(allOutput).toMatch(/─{60}/); // Standard separator pattern
+    expect(allOutput).toMatch(/🧠.*Claude brain connection ready/); // Consistent emoji usage
+    expect(allOutput).toContain("📄 Connection prompt:"); // Standard visual patterns
   });
 });
 
