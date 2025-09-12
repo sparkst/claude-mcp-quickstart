@@ -7,10 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **🚨 CRITICAL P0 FIX**: Resolved template injection vulnerability in brain-connection.js by implementing comprehensive HTML/markdown escaping for all user inputs
+- **Input Sanitization**: All user-controlled data (projectPath, projectType, mcpServers) now properly escaped before template interpolation
+- **XSS Prevention**: Enhanced security for generated markdown files prevents script injection attacks
+
 ### Added
+- **Brain Connection Security Suite**: Complete rewrite of brain-connection.js with security-first design principles
+- **Comprehensive Test Coverage**: Added 18 new security and reliability tests for brain-connection module (152 total tests)  
+- **Enhanced Error Boundaries**: Structured error handling prevents crashes and provides consistent API responses
+- **Resource Management**: Improved connection polling with exponential backoff and proper cleanup
+- **JSON Validation**: Robust validation for connection status files with graceful error handling
 - **Graceful Deprecation System**: Confirmation prompts for GitHub and Filesystem MCP servers with clear migration guidance
 - **Claude Settings Integration**: Comprehensive guidance directing users to Claude's native Connectors (GitHub, Cloudflare) and Extensions (Filesystem)
-- **Enhanced Test Coverage**: 30 new tests covering deprecation patterns, security, and integration flows (134 total tests)
 - **Backward Compatibility**: Deprecated servers remain functional for existing users while discouraging new adoption
 - **Migration Messaging**: Clear explanations of why native alternatives are superior
 
@@ -26,7 +35,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Filesystem MCP Server**: Use Claude Settings → Extensions → Filesystem for improved security and file access control
 - **Context7 MCP Server**: Use Claude Settings → Extensions for documentation and context features
 
-### Security
+### Fixed
+- **Template Injection (P0)**: Critical security vulnerability in brain-connection.js where user inputs could execute malicious code in generated markdown files
+- **Error Handling**: Standardized error boundaries and structured response patterns across all brain connection functions
+- **Resource Leaks**: Improved cleanup of polling timeouts and file watchers in connection detection
+- **JSON Parsing**: Enhanced validation prevents crashes from malformed status files
+
+### Improved  
+- **Code Quality**: Reduced cyclomatic complexity by extracting helper functions (escapeMarkdown, formatServerList, createSuccessResult)
+- **Testing Strategy**: Property-based testing approach with comprehensive edge case coverage
 - **Token Validation**: Enhanced security patterns for deprecated server configurations
 - **Confirmation Flows**: User must explicitly confirm before proceeding with deprecated options
 - **Migration Safety**: Existing configurations preserved while guiding toward better alternatives
