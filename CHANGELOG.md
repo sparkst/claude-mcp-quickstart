@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] - 2025-09-12
+
 ### Fixed - CRITICAL Architecture Correction
 - **🚨 CRITICAL ARCHITECTURE FIX**: Corrected fundamental misunderstanding about Claude Desktop's built-in tools vs MCP servers (REQ-201 through REQ-206)
 - **Built-in Tool Recognition**: System now correctly identifies Filesystem, Context7, and GitHub as Claude Desktop Extensions/Connectors, not MCP servers
