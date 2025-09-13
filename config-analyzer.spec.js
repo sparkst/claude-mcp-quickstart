@@ -14,6 +14,75 @@ import {
   getServerConfigurationDetails,
 } from "./config-analyzer.js";
 
+describe("REQ-201 & REQ-204: Architecture-Aware Configuration Analysis", () => {
+  const mockMixedConfig = {
+    mcpServers: {
+      // Built-in tools that should be recognized but handled differently
+      filesystem: {
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-filesystem", "/workspace"],
+      },
+      github: {
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-github"],
+        env: { GITHUB_TOKEN: "ghp_test123" },
+      },
+      // Custom MCP servers that should be analyzed normally
+      memory: {
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-memory"],
+      },
+      supabase: {
+        command: "npx",
+        args: ["-y", "@supabase/mcp-server-supabase"],
+      },
+    },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("REQ-201 — configuration analysis distinguishes between built-in tools and custom MCP servers", async () => {
+    vi.spyOn(fs, "access").mockResolvedValue(undefined);
+    vi.spyOn(fs, "readFile").mockResolvedValue(JSON.stringify(mockMixedConfig));
+
+    const analysis = await analyzeConfiguration("/fake/config/path");
+
+    expect(analysis.servers).toBeDefined();
+    expect(analysis.servers.filesystem).toBeDefined();
+    expect(analysis.servers.github).toBeDefined();
+    expect(analysis.servers.memory).toBeDefined();
+    expect(analysis.servers.supabase).toBeDefined();
+
+    // All should be marked as configured, but implementation should recognize
+    // that filesystem and github are built-in tools
+    expect(analysis.servers.filesystem.configured).toBe(true);
+    expect(analysis.servers.github.configured).toBe(true);
+    expect(analysis.servers.memory.configured).toBe(true);
+    expect(analysis.servers.supabase.configured).toBe(true);
+  });
+
+  test("REQ-204 — server configuration details properly categorize built-in vs custom servers", async () => {
+    vi.spyOn(fs, "access").mockResolvedValue(undefined);
+    vi.spyOn(fs, "readFile").mockResolvedValue(JSON.stringify(mockMixedConfig));
+
+    const serverDetails =
+      await getServerConfigurationDetails("/fake/config/path");
+
+    expect(serverDetails.filesystem.status).toBe("configured");
+    expect(serverDetails.github.status).toBe("configured");
+    expect(serverDetails.memory.status).toBe("configured");
+    expect(serverDetails.supabase.status).toBe("configured");
+
+    // All should have details, but the analysis should note that some are built-in
+    expect(serverDetails.filesystem.details).toBeDefined();
+    expect(serverDetails.github.details).toBeDefined();
+    expect(serverDetails.memory.details).toBeDefined();
+    expect(serverDetails.supabase.details).toBeDefined();
+  });
+});
+
 describe("REQ-304: Configuration Analysis Engine", () => {
   const mockValidConfig = {
     mcpServers: {

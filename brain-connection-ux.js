@@ -89,9 +89,9 @@ export function generatePracticalExamples(
     },
 
     {
-      title: "🔐 Security Review",
-      prompt: `Perform a security review of my ${safeProjectType} project:\n- Authentication and authorization flaws\n- Input validation gaps\n- Data exposure risks\n- Dependency vulnerabilities\n- Configuration security`,
-      category: "security",
+      title: "⚙️ Setup Claude Extensions & Security Review",
+      prompt: `Help me set up Claude Desktop for optimal development workflow and perform a security review:\n1. Go to Settings → Extensions to enable Filesystem and Context7\n2. Go to Settings → Connectors to enable GitHub integration\n3. Configure your project directories for secure file access\n4. Review authentication, input validation, and dependency vulnerabilities`,
+      category: "setup",
     },
   ];
 
@@ -447,6 +447,38 @@ export function generateProfessionalUXMessaging(messageConfig) {
     additionalProperties.progressIndicator = true;
     additionalProperties.followsPatterns = ["vscode", "github", "vercel"];
     additionalProperties.modernUX = true;
+  } else if (type === "troubleshooting") {
+    message = "Troubleshooting guidance for Claude Desktop setup";
+    const guidance = [];
+
+    if (context?.builtInIssues?.includes("filesystem")) {
+      guidance.push({
+        action:
+          "Enable Filesystem in Settings → Extensions, then configure project directory access",
+        type: "built-in",
+        severity: "critical",
+      });
+    }
+
+    if (context?.builtInIssues?.includes("github")) {
+      guidance.push({
+        action:
+          "Enable GitHub in Settings → Connectors, then authenticate with your account",
+        type: "built-in",
+        severity: "high",
+      });
+    }
+
+    if (context?.mcpIssues?.includes("memory")) {
+      guidance.push({
+        action: "Configure memory MCP server in claude_desktop_config.json",
+        type: "mcp-server",
+        severity: "medium",
+      });
+    }
+
+    additionalProperties.guidance = guidance;
+    additionalProperties.architectureAware = true;
   } else {
     message = escapeText(String(messageConfig));
   }
@@ -481,8 +513,8 @@ export function displayFullFilePaths(projectPath, relativeFiles) {
     path.join(projectPath, file)
   );
 
-  const originalBasenames = relativeFiles.map(file => path.basename(file));
-  const formattedPaths = absolutePaths.map(p => p); // Already formatted as absolute paths
+  const originalBasenames = relativeFiles.map((file) => path.basename(file));
+  const formattedPaths = absolutePaths.map((p) => p); // Already formatted as absolute paths
 
   return {
     paths: absolutePaths,
@@ -496,7 +528,7 @@ export function displayFullFilePaths(projectPath, relativeFiles) {
     basenamesReplaced: true,
     preservesLocations: true,
     pathResolutionIntact: true,
-    quoted: false
+    quoted: false,
   };
 }
 
@@ -524,13 +556,17 @@ export function generatePracticalExampleLibrary(mcpServers) {
       valueDemo: true,
       beforeAfter: {
         withoutMcp: `Manual ${example.category} tasks requiring multiple steps`,
-        withMcp: `Automated ${example.category} operations via Claude integration`
-      }
+        withMcp: `Automated ${example.category} operations via Claude integration`,
+      },
     };
 
     // Add specific properties for database examples
     if (server === "supabase") {
-      const titleAndPrompt = (example.title + " " + example.prompt).toLowerCase();
+      const titleAndPrompt = (
+        example.title +
+        " " +
+        example.prompt
+      ).toLowerCase();
       if (titleAndPrompt.includes("design")) {
         additionalProps.specific = "design_check";
       }
@@ -558,15 +594,16 @@ export function generatePracticalExampleLibrary(mcpServers) {
   });
 
   // Add a memory retrieval example if not present
-  const hasMemoryRetrieve = transformedExamples.some(ex => 
-    ex.server === "memory" && ex.operation === "retrieve"
+  const hasMemoryRetrieve = transformedExamples.some(
+    (ex) => ex.server === "memory" && ex.operation === "retrieve"
   );
-  
+
   if (!hasMemoryRetrieve) {
     // Replace the last example with a retrieve example to maintain count
     transformedExamples[transformedExamples.length - 1] = {
       title: "🧠 Retrieve Project Context from Memory",
-      prompt: "Retrieve the previously saved project context and remind me of the current focus, known issues, and key decisions made.",
+      prompt:
+        "Retrieve the previously saved project context and remind me of the current focus, known issues, and key decisions made.",
       category: "memory",
       server: "memory",
       operation: "retrieve",
@@ -578,8 +615,8 @@ export function generatePracticalExampleLibrary(mcpServers) {
       valueDemo: true,
       beforeAfter: {
         withoutMcp: "Manual memory tasks requiring multiple steps",
-        withMcp: "Automated memory operations via Claude integration"
-      }
+        withMcp: "Automated memory operations via Claude integration",
+      },
     };
   }
 
@@ -587,21 +624,24 @@ export function generatePracticalExampleLibrary(mcpServers) {
     count: transformedExamples.length,
     examples: transformedExamples,
     valueProposition: "clear",
-    mcpValue: "demonstrated"
+    mcpValue: "demonstrated",
   };
 }
 
 /**
  * REQ-308: Generate MCP capability showcase
  */
-export function generateMCPCapabilityShowcase(mcpServers, projectContext = null) {
-  const baseCaps = generateMcpCapabilities({ 
-    servers: { 
+export function generateMCPCapabilityShowcase(
+  mcpServers,
+  projectContext = null
+) {
+  const baseCaps = generateMcpCapabilities({
+    servers: {
       servers: Array.isArray(mcpServers) ? mcpServers : [],
-      hasFilesystem: mcpServers.includes('filesystem'),
-      hasContext7: mcpServers.includes('context7'),
-      hasGitHub: mcpServers.includes('github')
-    } 
+      hasFilesystem: mcpServers.includes("filesystem"),
+      hasContext7: mcpServers.includes("context7"),
+      hasGitHub: mcpServers.includes("github"),
+    },
   });
 
   const enhancedCapabilities = baseCaps.map((cap) => ({
@@ -622,10 +662,10 @@ export function generateMCPCapabilityShowcase(mcpServers, projectContext = null)
     uniqueToMcp: true,
     alternativeExists: false,
     mcpExclusive: true,
-    examples: projectContext ? [
-      `${projectContext.projectType || 'Node.js'} integration example`
-    ] : ["Integration example"],
-    beforeMcp: "not possible"
+    examples: projectContext
+      ? [`${projectContext.projectType || "Node.js"} integration example`]
+      : ["Integration example"],
+    beforeMcp: "not possible",
   }));
 
   return {
@@ -633,7 +673,7 @@ export function generateMCPCapabilityShowcase(mcpServers, projectContext = null)
     capabilities: enhancedCapabilities,
     contextAware: !!projectContext,
     roiClear: true,
-    immediateValue: true
+    immediateValue: true,
   };
 }
 

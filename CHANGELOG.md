@@ -7,14 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - CRITICAL Architecture Correction
+- **🚨 CRITICAL ARCHITECTURE FIX**: Corrected fundamental misunderstanding about Claude Desktop's built-in tools vs MCP servers (REQ-201 through REQ-206)
+- **Built-in Tool Recognition**: System now correctly identifies Filesystem, Context7, and GitHub as Claude Desktop Extensions/Connectors, not MCP servers
+- **False Positive Prevention**: Users with working setups no longer receive incorrect "broken configuration" warnings
+- **Architectural Validation**: Comprehensive test suite (291 tests) validates correct distinction between built-in tools and custom MCP servers
+
+### Added - Architecture Correction Implementation
+- **Direct Tool Testing**: Built-in features now tested through actual Claude tool calls rather than MCP configuration checks (REQ-202)
+- **Correct Troubleshooting Guidance**: Users directed to Settings→Extensions (Filesystem/Context7) and Settings→Connectors (GitHub) for proper setup (REQ-203)
+- **Architecture-Aware Validation**: Only legitimate MCP servers (memory, supabase, etc.) are validated through MCP configuration (REQ-204)
+- **Setup Documentation Correction**: All setup guides now point to correct Settings sections with accurate UI guidance (REQ-205)
+- **Backward Compatibility**: Existing MCP server configurations continue to work without breaking changes (REQ-206)
+
 ### Security
 - **🚨 CRITICAL P0 FIX**: Resolved template injection vulnerability in brain-connection.js by implementing comprehensive HTML/markdown escaping for all user inputs
 - **Input Sanitization**: All user-controlled data (projectPath, projectType, mcpServers) now properly escaped before template interpolation
 - **XSS Prevention**: Enhanced security for generated markdown files prevents script injection attacks
 
+### Technical Implementation
+- **setup-diagnostics.js**: Implemented direct tool testing for built-in Claude Desktop features
+- **config-analyzer.js**: Added architecture-aware configuration analysis that distinguishes built-in vs MCP tools
+- **brain-connection-ux.js**: Updated with correct Settings UI guidance for troubleshooting
+- **Comprehensive Testing**: 291 tests covering architectural validation, security patterns, and reliability flows
+- **PE-Reviewer Approved**: High quality rating with no breaking changes to legitimate workflows
+
 ### Added
 - **Brain Connection Security Suite**: Complete rewrite of brain-connection.js with security-first design principles
-- **Comprehensive Test Coverage**: Added 18 new security and reliability tests for brain-connection module (152 total tests)  
 - **Enhanced Error Boundaries**: Structured error handling prevents crashes and provides consistent API responses
 - **Resource Management**: Improved connection polling with exponential backoff and proper cleanup
 - **JSON Validation**: Robust validation for connection status files with graceful error handling

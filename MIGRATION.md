@@ -1,6 +1,20 @@
-# Migration Guide: Claude MCP Quickstart Refactor
+# Migration Guide: Claude MCP Quickstart Architecture Correction
 
-This guide helps you understand and migrate to the refactored version of Claude MCP Quickstart.
+This guide helps you understand the critical architecture correction and migration to the corrected version of Claude MCP Quickstart.
+
+## 🚨 Critical Architecture Fix (v2.3.x)
+
+**IMPORTANT**: This is a **correctness fix**, not just a feature enhancement. Previous versions had a fundamental misunderstanding of Claude Desktop's architecture.
+
+### The Problem We Fixed
+- **False Positives**: Users with working Claude Desktop setups were incorrectly flagged as having "broken configurations"
+- **Wrong Architecture**: System treated built-in tools (Filesystem, Context7, GitHub) as MCP servers
+- **Incorrect Guidance**: Troubleshooting directed users to edit MCP configs for built-in features
+
+### The Solution
+- **Correct Understanding**: Built-in tools are Claude Desktop Extensions/Connectors, not MCP servers
+- **Direct Testing**: Built-in features tested through actual Claude tool calls
+- **Proper Guidance**: Users directed to Settings UI for built-in features, MCP config only for custom servers
 
 ## What Changed?
 
@@ -9,11 +23,24 @@ This guide helps you understand and migrate to the refactored version of Claude 
 - **Filesystem MCP Server**: Deprecated with confirmation prompts directing to Claude Settings → Extensions  
 - **Context7 MCP Server**: Removed from setup choices, users directed to Claude Settings → Extensions
 
-### Enhanced Components
+### Enhanced Components  
+- **Architecture-Aware Validation**: System now correctly distinguishes built-in vs MCP server tools
+- **Direct Tool Testing**: Built-in features tested through Claude tool calls, not MCP config
+- **Correct Troubleshooting**: Users directed to Settings UI for built-in features
+- **Comprehensive Testing**: 291 tests including architectural validation and edge cases
 - **Deprecation System**: Confirmation prompts with clear migration guidance and performance benefits
 - **Claude Settings Integration**: Comprehensive guidance for native connectors and extensions
 - **Backward Compatibility**: Existing configurations preserved while encouraging migration
-- **Enhanced Testing**: 30 new tests covering deprecation patterns and security flows
+
+### Architecture Correction Impact
+- **No More False Positives**: Working setups no longer flagged as broken
+- **Correct Tool Classification**: 
+  - Filesystem → Settings → Extensions (not MCP server)
+  - Context7 → Settings → Extensions (not MCP server) 
+  - GitHub → Settings → Connectors (not MCP server)
+  - memory, supabase, brave, tavily → MCP servers (correctly identified)
+- **Proper Validation Logic**: Only validates actual MCP servers through configuration files
+- **User Experience**: Eliminated confusion about why "working" setups showed errors
 
 ## Why These Changes?
 
@@ -30,6 +57,25 @@ This guide helps you understand and migrate to the refactored version of Claude 
 - **No Breaking Changes**: Graceful deprecation preserves existing functionality while guiding toward better options
 
 ## Migration Steps
+
+### 0. Understanding the Architecture Fix (IMPORTANT)
+
+If you were previously seeing "configuration errors" for tools that seemed to be working, **this was a bug in our system**, not your setup:
+
+**Before (Incorrect):**
+- System checked MCP config for Filesystem access → ❌ False errors
+- System checked MCP config for GitHub access → ❌ False errors  
+- System checked MCP config for Context7 → ❌ False errors
+
+**After (Correct):**
+- System tests Filesystem through direct tool calls → ✅ Accurate results
+- System tests GitHub through direct tool calls → ✅ Accurate results
+- System tests Context7 through direct tool calls → ✅ Accurate results
+
+**What This Means For You:**
+- **Working setups will now show as working** (no more false "broken" warnings)
+- **Troubleshooting guides now point to correct Settings sections**
+- **Only actual MCP servers are validated through configuration files**
 
 ### 1. Run Setup (Graceful Deprecation Experience)
 

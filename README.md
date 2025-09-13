@@ -34,11 +34,35 @@ npx claude-mcp-quickstart
 ### Development Setup
 ```bash
 npm install
-npm test              # Run all tests (134 tests)
+npm test              # Run all tests (291 tests)
 npm run typecheck     # TypeScript validation
 ```
 
 ## Architecture Overview
+
+### 🚨 Critical Architecture Correction (v2.3.x)
+
+**FIXED**: Major architecture understanding correction that prevents false "broken configuration" warnings for working setups.
+
+**Problem Resolved**: Previous versions incorrectly treated Claude Desktop's built-in tools (Filesystem, Context7, GitHub) as MCP servers, causing false positive errors for users with properly configured systems.
+
+**Solution**: System now correctly distinguishes:
+- **Built-in Extensions**: Filesystem, Context7 (Settings → Extensions)
+- **Built-in Connectors**: GitHub (Settings → Connectors) 
+- **Custom MCP Servers**: memory, supabase, brave, tavily (managed via `claude_desktop_config.json`)
+
+### Current Architecture (Post-Correction)
+
+**Built-in Claude Desktop Features** (managed via Settings UI):
+- **Filesystem Access**: Settings → Extensions → Filesystem
+- **Documentation/Context**: Settings → Extensions → Context7
+- **GitHub Integration**: Settings → Connectors → GitHub
+
+**Custom MCP Servers** (managed via configuration file):
+- **Memory**: Conversation memory persistence (core server)
+- **Supabase**: Database operations with access tokens  
+- **Brave Search**: Web search capabilities
+- **Tavily AI**: AI-optimized search
 
 ### Token Security System
 - **Masked Display**: Shows first 5 + last 3 characters (`abcde********123`)
@@ -46,18 +70,10 @@ npm run typecheck     # TypeScript validation
 - **Format Validation**: Regex patterns for GitHub, Supabase, Brave, Tavily
 - **UX Workflow**: Enter (keep) / "-" (delete) / new value (replace)
 
-### MCP Server Support  
-- **Memory**: Conversation memory persistence (core server)
-- **Supabase**: Database operations with access tokens
-- **Brave Search**: Web search capabilities
-- **Tavily AI**: AI-optimized search
-
-### Deprecated MCP Servers (Graceful Migration)
-- **GitHub**: ⚠️ Deprecated - Use Claude Settings → Connectors → GitHub instead
-- **Filesystem**: ⚠️ Deprecated - Use Claude Settings → Extensions → Filesystem instead
-- **Context7**: ⚠️ Removed - Use Claude Settings → Extensions for documentation features
-
-**Migration Benefits**: Claude's native connectors and extensions provide better performance, security, and integration compared to external MCP servers.
+### Validation Strategy
+- **Built-in Tools**: Tested through direct Claude tool calls (no MCP config validation)
+- **Custom MCP Servers**: Validated through MCP configuration and server responses
+- **Troubleshooting**: Directs users to correct Settings sections for built-in features
 
 ### Workspace Creation
 - **Lovable.dev Integration**: Full-stack development templates
@@ -73,6 +89,7 @@ claude-mcp-quickstart/
 ├── CLAUDE.md           # Development guidelines
 ├── CHANGELOG.md        # Version history and changes
 ├── MIGRATION.md        # Migration guide for existing users
+├── ARCHITECTURE.md     # Claude Desktop architecture reference
 ├── package.json        # NPM configuration
 ├── index.js           # CLI entry point
 ├── setup.js           # Main setup logic & token security
@@ -85,7 +102,7 @@ claude-mcp-quickstart/
 │   ├── prompt-library.md
 │   ├── lovable-patterns.md
 │   └── project-templates/
-├── *.spec.js          # Test files (134 tests)
+├── *.spec.js          # Test files (291 tests)
 ├── vitest.config.js   # Test configuration & Windows compatibility  
 ├── .prettierrc        # Code formatting rules
 └── eslint.config.js   # Code linting configuration
@@ -176,7 +193,7 @@ This provides better performance and native integration.
 - **Deprecation Safety**: Confirmation prompts before proceeding with deprecated servers
 - **Configuration Protection**: Atomic file writes and JSON parsing with error recovery
 - **Migration Security**: Existing tokens preserved during configuration updates
-- **Comprehensive Testing**: 152 tests covering security patterns, injection prevention, and reliability flows
+- **Comprehensive Testing**: 291 tests covering architectural validation, security patterns, injection prevention, and reliability flows
 
 ## Development
 
@@ -204,7 +221,7 @@ Windows compatibility is ensured through a custom Vite plugin that handles sheba
 ### Code Quality
 - **Prettier** for consistent formatting
 - **ESLint** for code quality
-- **152 comprehensive tests** covering core functionality, security injection prevention, and reliability flows
+- **291 comprehensive tests** covering core functionality, architectural validation, security injection prevention, and reliability flows
 - **Vitest** for fast, modern testing
 - **Security-First Testing**: Dedicated test suite for template injection, XSS prevention, and error boundaries
 
@@ -302,3 +319,5 @@ For detailed implementation guidelines, see [CLAUDE.md](./CLAUDE.md).
 For version history and changes, see [CHANGELOG.md](./CHANGELOG.md).
 
 For migration from previous versions, see [MIGRATION.md](./MIGRATION.md).
+
+For Claude Desktop architecture reference, see [ARCHITECTURE.md](./ARCHITECTURE.md).

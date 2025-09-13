@@ -15,6 +15,79 @@ import {
   showcaseUniqueCapabilities,
 } from "./brain-connection-ux.js";
 
+describe("REQ-203 & REQ-205: Architecture-Aware UX Messaging", () => {
+  const mockProjectPath = "/Users/test/workspace/my-project";
+  const mockMcpServers = ["memory", "supabase"]; // Only custom servers
+  const mockBuiltInFeatures = ["filesystem", "context7", "github"]; // Built-in tools
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("REQ-203 — UX messaging distinguishes between built-in features and MCP servers", () => {
+    const connectionOutput = generateStreamlinedConnectionOutput(
+      mockProjectPath,
+      mockMcpServers
+    );
+
+    // Should not mislead users by treating built-ins as MCP servers
+    expect(connectionOutput.message).not.toContain("filesystem MCP server");
+    expect(connectionOutput.message).not.toContain("github MCP server");
+    expect(connectionOutput.message).not.toContain("context7 MCP server");
+
+    // Should focus on actual MCP servers
+    expect(connectionOutput.nextSteps).toBeDefined();
+  });
+
+  test("REQ-205 — setup documentation in UX points users to correct Settings sections", () => {
+    const enhancedContent = createEnhancedPromptContent(
+      mockProjectPath,
+      mockMcpServers
+    );
+
+    // Should guide users to Settings for built-in features
+    expect(
+      enhancedContent.examples.some(
+        (example) =>
+          example.prompt &&
+          (example.prompt.includes("Settings → Extensions") ||
+            example.prompt.includes("Settings → Connectors"))
+      )
+    ).toBe(true);
+
+    // Should not instruct users to configure built-ins as MCP servers
+    expect(
+      enhancedContent.examples.every(
+        (example) =>
+          !example.prompt ||
+          !example.prompt.includes("claude_desktop_config.json for filesystem")
+      )
+    ).toBe(true);
+  });
+
+  test("REQ-205 — troubleshooting UX provides architecture-correct guidance", () => {
+    const troubleshootingMessage = generateProfessionalUXMessaging({
+      type: "troubleshooting",
+      context: {
+        builtInIssues: ["filesystem", "github"],
+        mcpIssues: ["memory"],
+      },
+    });
+
+    expect(troubleshootingMessage.guidance).toBeDefined();
+    expect(
+      troubleshootingMessage.guidance.some(
+        (item) => item.action && item.action.includes("Settings")
+      )
+    ).toBe(true);
+
+    // Should distinguish between built-in and MCP troubleshooting
+    expect(troubleshootingMessage.message).not.toContain(
+      "configure filesystem in MCP"
+    );
+  });
+});
+
 describe("REQ-301: Streamlined Connection Output", () => {
   const mockProjectPath = "/Users/test/workspace/my-project";
   const mockMcpServers = ["filesystem", "memory", "supabase"];

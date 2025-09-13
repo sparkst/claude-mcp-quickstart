@@ -60,7 +60,7 @@ export async function parseClaudeConfig(configPath = null) {
         error: "Configuration file is empty",
         config: null,
         issues: ["EMPTY_CONFIG"],
-        fallbackConfig: { mcpServers: {} }
+        fallbackConfig: { mcpServers: {} },
       };
     }
 
@@ -73,7 +73,7 @@ export async function parseClaudeConfig(configPath = null) {
         error: `JSON syntax error: ${parseError.message}`,
         config: null,
         issues: ["MALFORMED_JSON"],
-        errorDetails: parseError.message
+        errorDetails: parseError.message,
       };
     }
 
@@ -90,7 +90,8 @@ export async function parseClaudeConfig(configPath = null) {
     // Check for incomplete config
     let warning = null;
     if (config.mcpServers === null || config.mcpServers === undefined) {
-      warning = "Configuration appears incomplete - mcpServers section is missing or null";
+      warning =
+        "Configuration appears incomplete - mcpServers section is missing or null";
     }
 
     return {
@@ -99,7 +100,7 @@ export async function parseClaudeConfig(configPath = null) {
       config,
       issues: [],
       warning,
-      mcpServers: warning ? {} : config.mcpServers
+      mcpServers: warning ? {} : config.mcpServers,
     };
   } catch (error) {
     if (error.code === "ENOENT") {
@@ -108,7 +109,7 @@ export async function parseClaudeConfig(configPath = null) {
         error: "Configuration file not found",
         config: null,
         issues: ["FILE_NOT_FOUND"],
-        fallbackConfig: { mcpServers: {} }
+        fallbackConfig: { mcpServers: {} },
       };
     } else if (error.code === "EACCES") {
       return {
@@ -116,7 +117,7 @@ export async function parseClaudeConfig(configPath = null) {
         error: "Cannot read configuration file - permission denied",
         config: null,
         issues: ["PERMISSION_DENIED"],
-        fallbackConfig: { mcpServers: {} }
+        fallbackConfig: { mcpServers: {} },
       };
     } else {
       return {
@@ -124,7 +125,7 @@ export async function parseClaudeConfig(configPath = null) {
         error: `Configuration read error: ${error.message}`,
         config: null,
         issues: ["READ_ERROR"],
-        fallbackConfig: { mcpServers: {} }
+        fallbackConfig: { mcpServers: {} },
       };
     }
   }
@@ -368,12 +369,12 @@ export async function analyzeClaudeConfiguration(
 // Legacy aliases removed to avoid conflicts
 export async function validateConfigurationStructure(configPath = null) {
   const parseResult = await parseClaudeConfig(configPath);
-  
+
   if (!parseResult.success) {
     return {
       isValid: false,
       valid: false,
-      errors: [{ message: parseResult.error, type: "PARSE_ERROR" }]
+      errors: [{ message: parseResult.error, type: "PARSE_ERROR" }],
     };
   }
 
@@ -381,26 +382,45 @@ export async function validateConfigurationStructure(configPath = null) {
   const errors = [];
 
   if (!config || typeof config !== "object") {
-    errors.push({ message: "Configuration must be an object", type: "INVALID_TYPE" });
-    return { 
-      isValid: false, 
-      valid: false, 
-      errors 
+    errors.push({
+      message: "Configuration must be an object",
+      type: "INVALID_TYPE",
+    });
+    return {
+      isValid: false,
+      valid: false,
+      errors,
     };
   }
 
   if (!config.mcpServers) {
-    errors.push({ message: "Missing mcpServers section", type: "MISSING_SECTION" });
+    errors.push({
+      message: "Missing mcpServers section",
+      type: "MISSING_SECTION",
+    });
   } else if (typeof config.mcpServers !== "object") {
-    errors.push({ message: "mcpServers must be an object", type: "INVALID_MCP_SERVERS" });
+    errors.push({
+      message: "mcpServers must be an object",
+      type: "INVALID_MCP_SERVERS",
+    });
   } else {
     // Validate individual server configurations
-    for (const [serverName, serverConfig] of Object.entries(config.mcpServers)) {
+    for (const [serverName, serverConfig] of Object.entries(
+      config.mcpServers
+    )) {
       if (typeof serverConfig === "string") {
-        errors.push({ server: serverName, issue: "invalid_structure", message: `Server ${serverName} has invalid structure` });
+        errors.push({
+          server: serverName,
+          issue: "invalid_structure",
+          message: `Server ${serverName} has invalid structure`,
+        });
       } else if (serverConfig && typeof serverConfig === "object") {
         if (!serverConfig.args || !Array.isArray(serverConfig.args)) {
-          errors.push({ server: serverName, issue: "missing_args", message: `Server ${serverName} missing args array` });
+          errors.push({
+            server: serverName,
+            issue: "missing_args",
+            message: `Server ${serverName} missing args array`,
+          });
         }
       }
     }
@@ -409,29 +429,39 @@ export async function validateConfigurationStructure(configPath = null) {
   return {
     isValid: errors.length === 0,
     valid: errors.length === 0,
-    errors
+    errors,
   };
-};
+}
 export async function getServerConfigurationDetails(configPath = null) {
   const parseResult = await parseClaudeConfig(configPath);
-  
+
   if (!parseResult.success) {
     return {
       filesystem: {
         status: "missing",
         enabled: false,
-        details: "Configuration not found or invalid"
+        details: "Configuration not found or invalid",
+      },
+      github: {
+        status: "missing",
+        enabled: false,
+        details: "Configuration not found or invalid",
       },
       memory: {
-        status: "missing", 
+        status: "missing",
         enabled: false,
-        details: "Configuration not found or invalid"
-      }
+        details: "Configuration not found or invalid",
+      },
+      supabase: {
+        status: "missing",
+        enabled: false,
+        details: "Configuration not found or invalid",
+      },
     };
   }
 
   const serverAnalysis = analyzeMcpServers(parseResult.config);
-  
+
   return {
     totalServers: (serverAnalysis.servers || []).length,
     enabledFeatures: {
@@ -440,20 +470,54 @@ export async function getServerConfigurationDetails(configPath = null) {
       github: serverAnalysis.hasGitHub || false,
     },
     filesystem: {
-      status: (serverAnalysis.hasFilesystem || false) ? "configured" : "missing",
+      status: serverAnalysis.hasFilesystem || false ? "configured" : "missing",
       enabled: serverAnalysis.hasFilesystem || false,
       workspacePaths: serverAnalysis.workspacePaths || [],
-      details: serverAnalysis.hasFilesystem ? "Filesystem server is active" : "Filesystem server not configured"
+      details: serverAnalysis.hasFilesystem
+        ? "Filesystem server is active"
+        : "Filesystem server not configured",
+    },
+    github: {
+      status: serverAnalysis.hasGitHub || false ? "configured" : "missing",
+      enabled: serverAnalysis.hasGitHub || false,
+      details: serverAnalysis.hasGitHub
+        ? "GitHub server is active"
+        : "GitHub server not configured",
     },
     memory: {
-      status: (serverAnalysis.servers || []).some(s => s.toLowerCase().includes('memory')) ? "configured" : "missing",
-      enabled: (serverAnalysis.servers || []).some(s => s.toLowerCase().includes('memory')),
-      details: (serverAnalysis.servers || []).some(s => s.toLowerCase().includes('memory')) ? "Memory server is active" : "Memory server not configured"
+      status: (serverAnalysis.servers || []).some((s) =>
+        s.toLowerCase().includes("memory")
+      )
+        ? "configured"
+        : "missing",
+      enabled: (serverAnalysis.servers || []).some((s) =>
+        s.toLowerCase().includes("memory")
+      ),
+      details: (serverAnalysis.servers || []).some((s) =>
+        s.toLowerCase().includes("memory")
+      )
+        ? "Memory server is active"
+        : "Memory server not configured",
+    },
+    supabase: {
+      status: (serverAnalysis.servers || []).some((s) =>
+        s.toLowerCase().includes("supabase")
+      )
+        ? "configured"
+        : "missing",
+      enabled: (serverAnalysis.servers || []).some((s) =>
+        s.toLowerCase().includes("supabase")
+      ),
+      details: (serverAnalysis.servers || []).some((s) =>
+        s.toLowerCase().includes("supabase")
+      )
+        ? "Supabase server is active"
+        : "Supabase server not configured",
     },
     workspacePaths: serverAnalysis.workspacePaths || [],
     issues: serverAnalysis.issues || [],
   };
-};
+}
 
 /**
  * Main configuration analysis function
@@ -461,20 +525,23 @@ export async function getServerConfigurationDetails(configPath = null) {
  */
 export async function analyzeConfiguration(configPath = null) {
   const parseResult = await parseClaudeConfig(configPath);
-  
+
   if (!parseResult.success) {
     return {
       success: false,
-      error: parseResult.error.includes('JSON syntax error') ? 
-        parseResult.error.replace('JSON syntax error', 'Configuration file is malformed') :
-        parseResult.error,
+      error: parseResult.error.includes("JSON syntax error")
+        ? parseResult.error.replace(
+            "JSON syntax error",
+            "Configuration file is malformed"
+          )
+        : parseResult.error,
       servers: {},
-      fallbackMode: true
+      fallbackMode: true,
     };
   }
 
   const serverAnalysis = analyzeMcpServers(parseResult.config);
-  
+
   return {
     success: true,
     error: null,
@@ -483,17 +550,45 @@ export async function analyzeConfiguration(configPath = null) {
         configured: serverAnalysis.hasFilesystem,
         workspacePath: serverAnalysis.workspacePaths[0] || null,
         command: serverAnalysis.hasFilesystem ? "npx" : null,
-        enabled: serverAnalysis.hasFilesystem
+        enabled: serverAnalysis.hasFilesystem,
+        type: "built-in",
+        settingsPath: "Extensions",
+      },
+      github: {
+        configured: serverAnalysis.hasGitHub,
+        enabled: serverAnalysis.hasGitHub,
+        type: "built-in",
+        settingsPath: "Connectors",
       },
       memory: {
-        configured: serverAnalysis.servers.includes("memory") || 
-                   serverAnalysis.servers.some(s => s.toLowerCase().includes("memory")),
-        enabled: serverAnalysis.servers.includes("memory") || 
-                serverAnalysis.servers.some(s => s.toLowerCase().includes("memory"))
-      }
+        configured:
+          serverAnalysis.servers.includes("memory") ||
+          serverAnalysis.servers.some((s) =>
+            s.toLowerCase().includes("memory")
+          ),
+        enabled:
+          serverAnalysis.servers.includes("memory") ||
+          serverAnalysis.servers.some((s) =>
+            s.toLowerCase().includes("memory")
+          ),
+        type: "mcp-server",
+      },
+      supabase: {
+        configured:
+          serverAnalysis.servers.includes("supabase") ||
+          serverAnalysis.servers.some((s) =>
+            s.toLowerCase().includes("supabase")
+          ),
+        enabled:
+          serverAnalysis.servers.includes("supabase") ||
+          serverAnalysis.servers.some((s) =>
+            s.toLowerCase().includes("supabase")
+          ),
+        type: "mcp-server",
+      },
     },
     workspacePaths: serverAnalysis.workspacePaths,
-    issues: serverAnalysis.issues
+    issues: serverAnalysis.issues,
   };
 }
 
@@ -508,7 +603,7 @@ export const parseClaudeDesktopConfig = parseClaudeConfig;
  */
 export async function detectFilesystemServer(configPath = null) {
   const parseResult = await parseClaudeConfig(configPath);
-  
+
   if (!parseResult.success) {
     return {
       enabled: false,
@@ -517,13 +612,13 @@ export async function detectFilesystemServer(configPath = null) {
       setupGuidance: [
         "Install Claude Desktop application",
         "Configure filesystem server in settings",
-        "Add your workspace directories"
-      ]
+        "Add your workspace directories",
+      ],
     };
   }
 
   const serverAnalysis = analyzeMcpServers(parseResult.config);
-  
+
   if (serverAnalysis.hasFilesystem) {
     return {
       enabled: true,
@@ -531,7 +626,7 @@ export async function detectFilesystemServer(configPath = null) {
       workspacePath: serverAnalysis.workspacePaths[0] || "/workspace",
       command: "npx",
       args: ["@modelcontextprotocol/server-filesystem"],
-      setupGuidance: ["Filesystem server is properly configured"]
+      setupGuidance: ["Filesystem server is properly configured"],
     };
   }
 
@@ -539,7 +634,8 @@ export async function detectFilesystemServer(configPath = null) {
     enabled: false,
     configured: false,
     reason: "not_found",
-    setupGuidance: "Open Claude Desktop settings, enable filesystem extension, add your project directories to allowed paths"
+    setupGuidance:
+      "Open Claude Desktop settings, enable filesystem extension, add your project directories to allowed paths",
   };
 }
 
@@ -549,39 +645,39 @@ export async function detectFilesystemServer(configPath = null) {
  */
 export async function identifyMissingExtensions(configPath = null) {
   const parseResult = await parseClaudeConfig(configPath);
-  
+
   if (!parseResult.success) {
     return {
       context7: {
         missing: true,
         priority: "recommended",
-        setupGuidance: ["Install Context7 MCP server"]
+        setupGuidance: ["Install Context7 MCP server"],
       },
       github: {
         missing: true,
-        priority: "recommended", 
-        setupGuidance: ["Install GitHub MCP server"]
-      }
+        priority: "recommended",
+        setupGuidance: ["Install GitHub MCP server"],
+      },
     };
   }
 
   const serverAnalysis = analyzeMcpServers(parseResult.config);
-  
+
   return {
     context7: {
       missing: !serverAnalysis.hasContext7,
       priority: "recommended",
-      setupGuidance: serverAnalysis.hasContext7 ? 
-        "Context7 is configured" : 
-        "Install Context7 MCP server for enhanced documentation access"
+      setupGuidance: serverAnalysis.hasContext7
+        ? "Context7 is configured"
+        : "Install Context7 MCP server for enhanced documentation access",
     },
     github: {
       missing: !serverAnalysis.hasGitHub,
       priority: "recommended",
-      setupGuidance: serverAnalysis.hasGitHub ? 
-        "GitHub integration is configured" : 
-        "Install GitHub MCP server for repository integration"
-    }
+      setupGuidance: serverAnalysis.hasGitHub
+        ? "GitHub integration is configured"
+        : "Install GitHub MCP server for repository integration",
+    },
   };
 }
 
@@ -591,7 +687,7 @@ export async function identifyMissingExtensions(configPath = null) {
  */
 export async function handleMalformedConfig(configPath = null) {
   const parseResult = await parseClaudeConfig(configPath);
-  
+
   return {
     success: false,
     error: parseResult.error,
@@ -600,13 +696,13 @@ export async function handleMalformedConfig(configPath = null) {
     recoverySuggestions: [
       "Check JSON syntax for missing commas or brackets",
       "Validate configuration structure",
-      "Use Claude desktop settings UI instead of manual editing"
+      "Use Claude desktop settings UI instead of manual editing",
     ],
     fallbackConfig: {
-      mcpServers: {}
+      mcpServers: {},
     },
     degradedMode: true,
-    fallbackGuidance: "Consider manual setup if automated configuration fails"
+    fallbackGuidance: "Consider manual setup if automated configuration fails",
   };
 }
 
