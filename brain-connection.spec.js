@@ -9,6 +9,39 @@ import {
   initiateBrainConnection,
 } from "./brain-connection.js";
 
+// Mock the setup-diagnostics module
+vi.mock("./setup-diagnostics.js", () => ({
+  verifyClaudeSetup: vi.fn().mockResolvedValue({
+    success: true,
+    analysis: { mcpServers: {}, builtInFeatures: {} },
+    summary: { filesystemEnabled: true, totalServers: 0 },
+    troubleshooting: {}
+  }),
+}));
+
+// Mock the brain-connection-ux module
+vi.mock("./brain-connection-ux.js", () => ({
+  generateEnhancedPromptContent: vi.fn().mockReturnValue({
+    practicalExamples: [],
+    mcpCapabilities: [],
+    enabledCapabilities: 0,
+    totalCapabilities: 10
+  }),
+  generateSetupVerificationContent: vi.fn().mockReturnValue({
+    status: "success",
+    message: "Setup verified",
+    details: {
+      filesystemEnabled: true,
+      workspaceConfigured: true,
+      projectIncluded: true,
+      totalServers: 0,
+      recommendedExtensions: { context7: false, github: false }
+    }
+  }),
+  formatTroubleshootingGuidance: vi.fn().mockReturnValue(""),
+  generateMcpCapabilities: vi.fn().mockReturnValue([])
+}));
+
 describe("createBrainConnectionFile", () => {
   test("REQ-202 — prevents template injection in project path input", async () => {
     const maliciousPath = "/safe/path</script><script>alert('xss')</script>";
@@ -384,5 +417,325 @@ describe("initiateBrainConnection", () => {
     expect(timeoutInfo.timestamp).toBeDefined();
     expect(timeoutInfo.fallbackProvided).toBe(true);
     expect(timeoutInfo.guidance).toBeDefined();
+  });
+});
+
+describe("REQ-401: Human-Readable Directory Paths", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test("REQ-401 — escapeMarkdown function preserves forward slashes for human readability", async () => {
+    const testPath = "/Users/travis/Library/CloudStorage/Dropbox/dev/claude-mcp-quickstart";
+    const mcpServers = ["memory", "supabase"];
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(testPath, mcpServers, "Node.js");
+
+    // Directory paths should be human-readable, not HTML-encoded
+    expect(capturedContent).toContain(`\`${testPath}\``);
+    expect(capturedContent).not.toContain("&#x2F;Users&#x2F;travis&#x2F;Library");
+    expect(capturedContent).not.toContain("&#x2F;dev&#x2F;claude-mcp-quickstart");
+  });
+
+  test("REQ-401 — config path maintains readable format in workspace context", async () => {
+    const projectPath = "/workspace/my-project";
+    const mcpServers = ["memory"];
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(projectPath, mcpServers, "React");
+
+    // Config path should be readable
+    const expectedConfigPath = "/Users/*/Library/Application Support/Claude/claude_desktop_config.json";
+    expect(capturedContent).toMatch(/claude_desktop_config\.json/);
+    expect(capturedContent).not.toContain("&#x2F;Library&#x2F;Application");
+  });
+
+  test("REQ-401 — memory save context uses readable paths", async () => {
+    const longPath = "/Users/developer/Projects/company/client-work/web-applications/react-dashboard";
+    const mcpServers = ["memory", "supabase"];
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(longPath, mcpServers, "React");
+
+    // Memory context should contain readable path
+    expect(capturedContent).toMatch(/Primary workspace: [^&]+web-applications\/react-dashboard/);
+    expect(capturedContent).not.toContain("&#x2F;web-applications&#x2F;react-dashboard");
+  });
+});
+
+
+describe("REQ-403: Use User's Updated Template Content", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test("REQ-403 — preserves user's improved introduction messaging", async () => {
+    const projectPath = "/user-project";
+    const mcpServers = ["memory", "supabase"];
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(projectPath, mcpServers, "Node.js");
+
+    // Should contain user's improved intro instead of generic generated content
+    expect(capturedContent).toContain("🧠 Claude Brain Connection");
+    expect(capturedContent).not.toContain("Generic MCP introduction");
+    expect(capturedContent).not.toContain("Auto-generated content");
+
+    // Should preserve user's context framing
+    expect(capturedContent).toContain("📁 Workspace Context");
+    expect(capturedContent).toContain("Save This Context to Memory");
+  });
+
+  test("REQ-403 — maintains user's UX improvements while inserting dynamic content", async () => {
+    const projectPath = "/dynamic-content-test";
+    const mcpServers = ["memory"];
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(projectPath, mcpServers, "Python");
+
+    // Should insert project-specific dynamic content into user's template
+    expect(capturedContent).toContain(projectPath);
+    expect(capturedContent).toContain("Python");
+    expect(capturedContent).toContain("memory");
+
+    // But preserve user's structural improvements and messaging
+    expect(capturedContent).toContain("⚠️ IMPORTANT: Confirm Connection");
+    expect(capturedContent).toContain("Ready to unlock the full potential");
+    expect(capturedContent).not.toContain("Generated template placeholder");
+  });
+
+  test("REQ-403 — uses user's enhanced instructions and guidance sections", async () => {
+    const projectPath = "/guidance-test";
+    const mcpServers = ["memory", "supabase", "context7"];
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(projectPath, mcpServers, "TypeScript");
+
+    // Should use user's improved guidance structure
+    expect(capturedContent).toContain("claude_brain_connected.json");
+    expect(capturedContent).toContain('"status": "connected"');
+    expect(capturedContent).toContain('"workspace_loaded": true');
+
+    // Should preserve user's conversational tone and helpful framing
+    expect(capturedContent).toMatch(/I've successfully connected.*workspace/);
+    expect(capturedContent).not.toContain("System has connected");
+    expect(capturedContent).not.toContain("Auto-configured workspace");
+  });
+
+  test("REQ-403 — template variables insert correctly without overriding user content", async () => {
+    const testPath = "/template-vars/special-project";
+    const mcpServers = ["memory", "supabase", "github"];
+    const projectType = "Next.js";
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(testPath, mcpServers, projectType);
+
+    // Dynamic insertions should work correctly
+    expect(capturedContent).toContain(testPath);
+    expect(capturedContent).toContain(projectType);
+    expect(capturedContent).toContain('"memory", "supabase", "github"');
+
+    // But user's content structure should be preserved
+    const timestampPattern = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+    expect(capturedContent).toMatch(timestampPattern);
+    expect(capturedContent).toContain("Last verified:");
+    expect(capturedContent).toContain("Context file: .claude-context");
+  });
+});
+
+describe("REQ-401: Critical HTML Escaping Bug - Over-Aggressive Path Escaping", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(fs, "writeFile").mockImplementation(() => Promise.resolve());
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test("REQ-401 — escapeMarkdown function over-escapes forward slashes making paths unreadable", async () => {
+    const humanReadablePath = "/Users/travis/Library/CloudStorage/Dropbox/dev/claude-mcp-quickstart";
+    const mcpServers = ["memory", "supabase"];
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(humanReadablePath, mcpServers, "Node.js");
+
+    // BUG: Current escapeMarkdown function over-escapes forward slashes
+    // This makes paths like "/Users/travis/Library" become "&#x2F;Users&#x2F;travis&#x2F;Library"
+    // which is completely unreadable for humans
+
+    // This should PASS (paths should be human-readable) but will FAIL due to over-escaping
+    expect(capturedContent).toContain(`\`${humanReadablePath}\``);
+    expect(capturedContent).not.toContain("&#x2F;Users&#x2F;travis&#x2F;Library");
+    expect(capturedContent).not.toContain("&#x2F;CloudStorage&#x2F;Dropbox");
+    expect(capturedContent).not.toContain("&#x2F;dev&#x2F;claude-mcp-quickstart");
+  });
+
+  test("REQ-401 — config path becomes unreadable due to forward slash escaping", async () => {
+    const projectPath = "/workspace/my-project";
+    const mcpServers = ["memory"];
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(projectPath, mcpServers, "React");
+
+    // BUG: Claude Desktop config path should be human-readable
+    const expectedConfigPattern = /Library\/Application Support\/Claude\/claude_desktop_config\.json/;
+    expect(capturedContent).toMatch(expectedConfigPattern);
+
+    // Should NOT contain HTML-escaped forward slashes
+    expect(capturedContent).not.toContain("&#x2F;Library&#x2F;Application");
+    expect(capturedContent).not.toContain("&#x2F;Claude&#x2F;claude_desktop_config");
+  });
+
+  test("REQ-401 — workspace context paths are rendered unreadable in memory save instructions", async () => {
+    const deepWorkspacePath = "/Users/developer/Projects/company/client-work/web-applications/react-dashboard";
+    const mcpServers = ["memory", "supabase"];
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(deepWorkspacePath, mcpServers, "React");
+
+    // BUG: Workspace paths in memory context should be copy-pasteable and readable
+    // This should show clean path like "Primary workspace: /Users/developer/Projects/company/client-work/web-applications/react-dashboard"
+    // But will show escaped version with &#x2F; making it unusable
+
+    expect(capturedContent).toMatch(/Primary workspace: [^&]+react-dashboard/);
+    expect(capturedContent).not.toContain("&#x2F;client-work&#x2F;web-applications");
+    expect(capturedContent).not.toContain("&#x2F;Projects&#x2F;company");
+  });
+
+  test("REQ-401 — file paths in connection prompts should be copy-pasteable", async () => {
+    const macOsPath = "/Users/travis/Library/CloudStorage/Dropbox/dev/claude-mcp-quickstart";
+    const linuxPath = "/home/user/projects/my-awesome-app";
+    const windowsStylePath = "C:/Users/developer/Documents/projects/webapp";
+
+    const testPaths = [macOsPath, linuxPath, windowsStylePath];
+
+    for (const testPath of testPaths) {
+      let capturedContent = "";
+      vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+        capturedContent = content;
+        return Promise.resolve();
+      });
+
+      await createBrainConnectionFile(testPath, ["memory"], "Node.js");
+
+      // BUG: All these paths should remain copy-pasteable, not HTML-encoded
+      expect(capturedContent).toContain(testPath);
+      expect(capturedContent).not.toContain("&#x2F;");
+
+      // For Windows paths, should preserve colons and backslashes
+      if (testPath.includes("C:")) {
+        expect(capturedContent).toContain("C:");
+        expect(capturedContent).not.toContain("C&#x3A;");
+      }
+    }
+  });
+
+  test("REQ-401 — brain connection file path instructions must be usable by humans", async () => {
+    const projectPath = "/complex/path/with/many/nested/directories/my-project";
+    const mcpServers = ["memory", "supabase", "github"];
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(projectPath, mcpServers, "TypeScript");
+
+    // BUG: File paths mentioned in the instructions should be human-readable
+    const expectedConnectionFile = `${projectPath}/connect_claude_brain.md`;
+    const expectedStatusFile = `${projectPath}/claude_brain_connected.json`;
+
+    expect(capturedContent).toContain(expectedConnectionFile);
+    expect(capturedContent).toContain(expectedStatusFile);
+
+    // Should NOT contain HTML-escaped paths that users can't read
+    expect(capturedContent).not.toContain("&#x2F;complex&#x2F;path&#x2F;with&#x2F;many");
+    expect(capturedContent).not.toContain("&#x2F;nested&#x2F;directories&#x2F;my-project");
+  });
+
+  test("REQ-401 — escapeMarkdown vs escapeMarkdownPath function usage demonstrates the fix needed", async () => {
+    const testPath = "/Users/travis/Documents/my-project";
+    const userInput = "<script>alert('xss')</script>";
+    const mcpServers = ["memory"];
+
+    let capturedContent = "";
+    vi.spyOn(fs, "writeFile").mockImplementation((path, content) => {
+      capturedContent = content;
+      return Promise.resolve();
+    });
+
+    await createBrainConnectionFile(testPath, mcpServers, userInput);
+
+    // BUG: The current code uses escapeMarkdown for paths which over-escapes forward slashes
+    // It should use escapeMarkdownPath for paths and escapeMarkdown for user input
+
+    // Paths should remain readable (escapeMarkdownPath should be used)
+    expect(capturedContent).toContain("/Users/travis/Documents/my-project");
+    expect(capturedContent).not.toContain("&#x2F;Users&#x2F;travis&#x2F;Documents");
+
+    // User input should be properly escaped (escapeMarkdown should be used)
+    expect(capturedContent).not.toContain("<script>alert('xss')</script>");
+    expect(capturedContent).toContain("&lt;script&gt;");
   });
 });

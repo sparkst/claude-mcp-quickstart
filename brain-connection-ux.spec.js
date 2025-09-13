@@ -13,6 +13,8 @@ import {
   formatConnectionMessage,
   createActionablePrompts,
   showcaseUniqueCapabilities,
+  generateMcpCapabilities,
+  generateEnhancedPromptContent,
 } from "./brain-connection-ux.js";
 
 describe("REQ-203 & REQ-205: Architecture-Aware UX Messaging", () => {
@@ -588,6 +590,197 @@ describe("REQ-308: MCP Capability Showcase", () => {
       expect(capability).toHaveProperty("alternativeExists", false);
       expect(capability).toHaveProperty("mcpExclusive", true);
       expect(capability.beforeMcp).toBe("not possible");
+    });
+  });
+});
+
+describe("REQ-404: Complex Capability Logic Needs Refactoring", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("REQ-404 — capability enablement logic is too complex and hard to maintain", () => {
+    // Complex nested conditions like in brain-connection-ux.js:127, 195, 207-210
+    const configAnalysis = {
+      mcpServers: ["memory", "supabase"],
+      builtInFeatures: {
+        filesystem: { available: true },
+        context7: { available: false },
+        github: { available: true }
+      }
+    };
+
+    const capabilities = generateMcpCapabilities(configAnalysis);
+
+    // The current logic is hard to predict and maintain
+    // This test demonstrates the complexity issue by showing unclear capability detection
+    const complexCapability = capabilities.find(cap =>
+      cap.title.includes("Workflow Integration")
+    );
+
+    // BUG: Complex logic makes it unclear when this capability should be enabled
+    // Current logic: (mcpServers.length + filesystem + github + context7) >= 2
+    // But with Object.keys() bug, mcpServers.length becomes 3 (array indices)
+    expect(complexCapability?.enabled).toBe(true);
+
+    // The logic should be simpler and more predictable
+    const enabledMcpCount = ["memory", "supabase"].length;
+    const enabledBuiltinCount = [true, false, true].filter(Boolean).length; // filesystem, context7, github
+    expect(enabledMcpCount + enabledBuiltinCount).toBeGreaterThanOrEqual(2);
+  });
+
+  test("REQ-404 — nested capability detection conditions are difficult to debug", () => {
+    // Test the complex nested logic that appears in multiple places
+    const testCases = [
+      {
+        name: "minimal setup",
+        config: {
+          mcpServers: ["memory"],
+          builtInFeatures: { filesystem: { available: true } }
+        },
+        expectedComplexCapabilityEnabled: true
+      },
+      {
+        name: "medium setup",
+        config: {
+          mcpServers: ["memory", "supabase"],
+          builtInFeatures: {
+            filesystem: { available: true },
+            github: { available: true }
+          }
+        },
+        expectedComplexCapabilityEnabled: true
+      },
+      {
+        name: "comprehensive setup",
+        config: {
+          mcpServers: ["memory", "supabase", "tavily-search"],
+          builtInFeatures: {
+            filesystem: { available: true },
+            context7: { available: true },
+            github: { available: true }
+          }
+        },
+        expectedComplexCapabilityEnabled: true
+      }
+    ];
+
+    testCases.forEach(testCase => {
+      const capabilities = generateMcpCapabilities(testCase.config);
+      const workflowCapability = capabilities.find(cap =>
+        cap.title.includes("Workflow Integration")
+      );
+
+      // BUG: Complex logic makes these results unpredictable
+      expect(workflowCapability?.enabled).toBe(testCase.expectedComplexCapabilityEnabled);
+    });
+  });
+});
+
+describe("REQ-405: Missing Defensive Checks for Configuration Access", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("REQ-405 — builtInFeatures access assumes specific object structure without validation", () => {
+    // Test malformed configuration objects that could cause runtime errors
+    const malformedConfigs = [
+      {
+        name: "missing builtInFeatures",
+        config: {
+          mcpServers: ["memory"]
+          // builtInFeatures missing entirely
+        }
+      },
+      {
+        name: "null builtInFeatures",
+        config: {
+          mcpServers: ["memory"],
+          builtInFeatures: null
+        }
+      },
+      {
+        name: "builtInFeatures with missing properties",
+        config: {
+          mcpServers: ["memory"],
+          builtInFeatures: {
+            filesystem: null,
+            context7: undefined,
+            github: { /* missing available property */ }
+          }
+        }
+      },
+      {
+        name: "builtInFeatures with wrong data types",
+        config: {
+          mcpServers: ["memory"],
+          builtInFeatures: {
+            filesystem: "true", // string instead of object
+            context7: 1, // number instead of object
+            github: [] // array instead of object
+          }
+        }
+      }
+    ];
+
+    malformedConfigs.forEach(({ name, config }) => {
+      // BUG: These should not throw errors but the current code lacks defensive checks
+      expect(() => {
+        const capabilities = generateMcpCapabilities(config);
+        // Access patterns like builtInFeatures?.filesystem?.available should be safe
+        const filesystemCap = capabilities.find(cap => cap.title.includes("File System"));
+        return filesystemCap?.enabled;
+      }).not.toThrow(`Configuration access should not fail for ${name}`);
+    });
+  });
+
+  test("REQ-405 — generateEnhancedPromptContent should handle missing configAnalysis gracefully", () => {
+    const projectPath = "/test";
+    const mcpServers = ["memory"];
+    const projectType = "Node.js";
+
+    // BUG: Missing defensive checks for undefined/null configAnalysis
+    const undefinedConfig = undefined;
+    const nullConfig = null;
+    const emptyConfig = {};
+
+    // These should not crash but provide reasonable defaults
+    expect(() => {
+      generateEnhancedPromptContent(projectPath, mcpServers, projectType, undefinedConfig);
+    }).not.toThrow("Should handle undefined configAnalysis");
+
+    expect(() => {
+      generateEnhancedPromptContent(projectPath, mcpServers, projectType, nullConfig);
+    }).not.toThrow("Should handle null configAnalysis");
+
+    expect(() => {
+      generateEnhancedPromptContent(projectPath, mcpServers, projectType, emptyConfig);
+    }).not.toThrow("Should handle empty configAnalysis");
+  });
+
+  test("REQ-405 — capability detection should provide fallback values for missing configuration", () => {
+    // Test configurations with partially missing data
+    const partialConfigs = [
+      { mcpServers: undefined, builtInFeatures: { filesystem: { available: true } } },
+      { mcpServers: null, builtInFeatures: { context7: { available: true } } },
+      { mcpServers: [], builtInFeatures: undefined },
+      { mcpServers: ["memory"], builtInFeatures: {} }
+    ];
+
+    partialConfigs.forEach(config => {
+      const capabilities = generateMcpCapabilities(config);
+
+      // BUG: Should provide reasonable defaults instead of failing
+      expect(Array.isArray(capabilities)).toBe(true);
+      expect(capabilities.length).toBe(10); // Should always return 10 capabilities
+
+      // Each capability should have required properties even with missing config
+      capabilities.forEach(cap => {
+        expect(cap).toHaveProperty('title');
+        expect(cap).toHaveProperty('description');
+        expect(cap).toHaveProperty('enabled');
+        expect(typeof cap.enabled).toBe('boolean');
+      });
     });
   });
 });

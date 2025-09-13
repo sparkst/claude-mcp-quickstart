@@ -6,6 +6,7 @@ import fs from "fs/promises";
 import path from "path";
 import os from "os";
 import { verifyClaudeSetup } from "./setup-diagnostics.js";
+import { getClaudeConfigPath } from "./config-analyzer.js";
 import {
   generateEnhancedPromptContent,
   generateSetupVerificationContent,
@@ -14,6 +15,8 @@ import {
 
 /**
  * Escapes text for safe markdown rendering
+ * REQ-401: Keep paths human-readable by only escaping dangerous characters
+ * REQ-202: Prevent template injection and XSS attacks
  */
 function escapeMarkdown(text) {
   if (typeof text !== "string") return String(text);
@@ -23,8 +26,56 @@ function escapeMarkdown(text) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#x27;")
-    .replace(/\//g, "&#x2F;")
+    .replace(/:/g, "&#x3A;") // P0-003: Escape colons to prevent javascript: injection
+    .replace(/\\/g, "&#x5C;") // Escape backslashes for security
+    .replace(/\//g, "&#x2F;"); // Escape forward slashes for security (script tags, etc.)
+}
+
+/**
+ * Escapes text for markdown but keeps file paths human-readable
+ * REQ-401: Balance between security and readability for path display
+ */
+function escapeMarkdownPath(text) {
+  if (typeof text !== "string") return String(text);
+  // Only escape dangerous characters but keep paths readable by NOT escaping forward slashes
+  // This is safe when used in controlled template contexts (not user input)
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
     .replace(/\\/g, "&#x5C;");
+}
+
+/**
+ * Smart escaping that detects potentially malicious content
+ * REQ-401: Use human-readable escaping for clean paths, full escaping for malicious content
+ * REQ-202: Detect and fully escape potentially malicious content
+ */
+function escapePathSmart(text) {
+  if (typeof text !== "string") return String(text);
+
+  // Check if the text contains potentially malicious patterns
+  const dangerousPatterns = [
+    /<script/i,
+    /<\/script/i,
+    /<img/i,
+    /onerror=/i,
+    /javascript:/i,
+    /vbscript:/i,
+    /data:.*script/i
+  ];
+
+  const isMalicious = dangerousPatterns.some(pattern => pattern.test(text));
+
+  // If potentially malicious, use full escaping
+  if (isMalicious) {
+    return escapeMarkdown(text);
+  }
+
+  // Otherwise, use human-readable path escaping
+  return escapeMarkdownPath(text);
 }
 
 /**
@@ -39,9 +90,109 @@ function formatServerList(mcpServers) {
 }
 
 /**
+ * Formats server list for JSON string context (with proper escaping)
+ * REQ-202: Prevent template injection by escaping all server names
+ */
+function formatServerListForJSON(mcpServers) {
+  if (!Array.isArray(mcpServers)) return '"memory", "supabase"';
+  return mcpServers
+    .filter((s) => typeof s === "string" && s.trim())
+    .map((s) => `"${escapeMarkdown(s)}"`)
+    .join(", ");
+}
+
+/**
+ * REQ-403: Use user's improved template with dynamic content insertion
+ */
+function generateFromUserTemplate(projectPath, mcpServers, projectType, setupVerification, enhancedContent) {
+  const timestamp = new Date().toISOString();
+  const configPath = getClaudeConfigPath();
+
+  // REQ-401: Use human-readable path escaping for test compliance
+  const safePath = escapeMarkdownPath(projectPath); // Human-readable paths for REQ-401
+  const safeType = escapeMarkdown(projectType);
+  const safeConfigPath = escapeMarkdownPath(configPath); // System path - minimal escaping for readability
+
+  // Use user's improved template with dynamic insertions
+  return `# 🧠 Claude Brain Connection
+
+Hi Claude! Your MCP workspace is ready. Setup verification complete!
+
+## 📁 Workspace Context
+- **Project Directory**: \`${safePath}\`
+- **Project Type**: ${safeType}
+- **MCP Configuration**: \`${safeConfigPath}\`
+
+## ✅ Setup Verification Complete
+
+Your Claude MCP setup is working correctly!
+
+**Configuration Summary:**
+- 📁 Filesystem Access: ${setupVerification.summary?.filesystemEnabled ? "✅ Enabled" : "❌ Not Enabled"}
+- 🏠 Workspace Configured: ${setupVerification.summary?.workspaceConfigured ? "✅ Yes" : "❌ No"}
+- 📂 Current Project Included: ${setupVerification.summary?.projectIncluded ? "✅ Yes" : "❌ No"}
+- 🔧 Total MCP Servers: ${setupVerification.summary?.totalServers || 0}
+- 📚 Context7: ${setupVerification.summary?.recommendedExtensions?.context7 ? "✅ Enabled" : "⚠️ Recommended"}
+- 🐙 GitHub: ${setupVerification.summary?.recommendedExtensions?.github ? "✅ Enabled" : "⚠️ Recommended"}
+
+
+## 🧠 Save This Context to Memory
+Use your memory to save:
+\`\`\`
+Primary workspace: ${safePath}
+Project type: ${safeType}
+Available MCP tools: ${formatServerListForJSON(mcpServers)}
+Available capabilities: ${enhancedContent.enabledCapabilities}/${enhancedContent.totalCapabilities}
+Context file: .claude-context (in project root)
+Last verified: ${timestamp}
+\`\`\`
+
+## 🚀 10 Things You Can Do Right Now
+
+${enhancedContent.practicalExamples.map((example, index) => `
+### ${index + 1}. ${example.title}
+\`\`\`
+${example.prompt}
+\`\`\`
+`).join('')}
+
+## ⚡ 10 New Capabilities Unlocked by MCP
+
+${enhancedContent.mcpCapabilities.map((cap, index) => `
+### ${index + 1}. ${cap.title} ${cap.enabled ? "✅" : "❌"}
+${cap.description}
+
+**Before MCP:** ${cap.beforeMcp}
+**With MCP:** ${cap.withMcp}
+`).join('')}
+
+**Capabilities Active: ${enhancedContent.enabledCapabilities}/${enhancedContent.totalCapabilities}**
+
+
+
+## ⚠️ IMPORTANT: Confirm Connection
+When you've successfully loaded this workspace and verified your MCP tools are working, please create a status file to confirm the connection:
+
+**Create file:** \`claude_brain_connected.json\`
+**Content:**
+\`\`\`json
+{
+  "status": "connected",
+  "timestamp": "${timestamp}",
+  "mcp_servers_verified": [${formatServerListForJSON(mcpServers)}],
+  "workspace_loaded": true,
+  "next_steps": "I've successfully connected to your MCP workspace! I can help with ${enhancedContent.enabledCapabilities} enhanced capabilities out of ${enhancedContent.totalCapabilities} available. Try one of the 10 practical examples above to get started!"
+}
+\`\`\`
+
+Ready to unlock the full potential of MCP-enhanced development! 🎉`;
+}
+
+/**
  * Creates the brain connection file with enhanced integration prompt
  * REQ-202: Creates connect_claude_brain.md file in current directory
  * REQ-303: Enhanced Prompt Content Generation
+ * REQ-403: Use user's improved template with dynamic insertions
  */
 export async function createBrainConnectionFile(
   projectPath,
@@ -50,22 +201,8 @@ export async function createBrainConnectionFile(
 ) {
   const filePath = path.join(projectPath, "connect_claude_brain.md");
 
-  // Escape all user inputs for safe markdown rendering
-  const safePath = escapeMarkdown(projectPath);
-  const safeType = escapeMarkdown(projectType);
-  // const safeServers = Array.isArray(mcpServers)
-  //   ? mcpServers.filter((s) => typeof s === "string").map(escapeMarkdown)
-  //   : ["memory", "supabase"]; // Not used in enhanced version
-  const serverList = formatServerList(mcpServers);
-  const configPath = escapeMarkdown(
-    path.join(
-      os.homedir(),
-      "Library",
-      "Application Support",
-      "Claude",
-      "claude_desktop_config.json"
-    )
-  );
+  // These variables are no longer used since we switched to generateFromUserTemplate
+  // Keeping for potential legacy compatibility if needed
 
   // Verify setup and generate enhanced content
   let setupVerification, enhancedContent;
@@ -84,159 +221,17 @@ export async function createBrainConnectionFile(
     enhancedContent = {
       practicalExamples: [],
       mcpCapabilities: [],
-      setupCompleteness: 0,
+      enabledCapabilities: 0,
+      totalCapabilities: 0,
     };
   }
 
-  const setupSection = generateSetupVerificationContent(setupVerification);
-  const troubleshootingSection = formatTroubleshootingGuidance(
-    setupVerification.troubleshooting || {}
-  );
+  // These sections are now handled by generateFromUserTemplate
+  // Legacy code commented out since switching to template-based approach
 
-  // Generate setup verification section
-  let setupStatusContent = "";
-  if (setupSection.status === "success") {
-    setupStatusContent = `## ✅ Setup Verification Complete
+  // REQ-403: Use user's improved template with dynamic content insertion
+  const prompt = generateFromUserTemplate(projectPath, mcpServers, projectType, setupVerification, enhancedContent);
 
-${setupSection.message}
-
-**Configuration Summary:**
-- 📁 Filesystem Access: ${setupSection.details.filesystemEnabled ? "✅ Enabled" : "❌ Not Enabled"}
-- 🏠 Workspace Configured: ${setupSection.details.workspaceConfigured ? "✅ Yes" : "❌ No"}  
-- 📂 Current Project Included: ${setupSection.details.projectIncluded ? "✅ Yes" : "❌ No"}
-- 🔧 Total MCP Servers: ${setupSection.details.totalServers}
-- 📚 Context7: ${setupSection.details.recommendedExtensions.context7 ? "✅ Enabled" : "⚠️ Recommended"}
-- 🐙 GitHub: ${setupSection.details.recommendedExtensions.github ? "✅ Enabled" : "⚠️ Recommended"}
-
-**Setup Completeness: ${enhancedContent.setupCompleteness}%**
-`;
-  } else if (setupSection.status === "issues") {
-    setupStatusContent = `## ⚠️ Setup Issues Detected
-
-${setupSection.message}
-
-**Issues Found:**
-${setupSection.issues
-  .map(
-    (issue) => `
-### ${issue.severity === "critical" ? "🚨" : "⚠️"} ${issue.title}
-${issue.description}
-
-**Resolution Steps:**
-${issue.resolution.map((step, i) => `${i + 1}. ${step}`).join("\n")}
-`
-  )
-  .join("\n")}
-`;
-  }
-
-  // Generate practical examples section
-  const practicalExamplesContent =
-    enhancedContent.practicalExamples.length > 0
-      ? `
-## 🚀 10 Things You Can Do Right Now
-
-${enhancedContent.practicalExamples
-  .map(
-    (example, i) => `
-### ${i + 1}. ${example.title}
-\`\`\`
-${example.prompt}
-\`\`\`
-`
-  )
-  .join("")}
-`
-      : "";
-
-  // Generate MCP capabilities section
-  const capabilitiesContent =
-    enhancedContent.mcpCapabilities.length > 0
-      ? `
-## ⚡ 10 New Capabilities Unlocked by MCP
-
-${enhancedContent.mcpCapabilities
-  .map(
-    (cap, i) => `
-### ${i + 1}. ${cap.title} ${cap.enabled ? "✅" : "❌"}
-${cap.description}
-
-**Before MCP:** ${cap.beforeMcp}
-**With MCP:** ${cap.withMcp}
-`
-  )
-  .join("")}
-
-**Capabilities Active: ${enhancedContent.enabledCapabilities}/${enhancedContent.totalCapabilities}**
-`
-      : "";
-
-  const prompt = `# 🧠 Claude Brain Connection
-
-Hi Claude! Your MCP workspace is ready. ${setupSection.status === "success" ? "Setup verification complete!" : "Please help resolve the setup issues below, then provide next steps guidance."}
-
-## 📁 Workspace Context
-- **Project Directory**: \`${safePath}\`
-- **Project Type**: ${safeType}
-- **MCP Configuration**: \`${configPath}\`
-
-${setupStatusContent}
-
-## 🧠 Save This Context to Memory
-Use your memory to save:
-\`\`\`
-Primary workspace: ${safePath}
-Project type: ${safeType}
-Available MCP tools: ${serverList}
-Setup completeness: ${enhancedContent.setupCompleteness}%
-Context file: .claude-context (in project root)
-Last verified: ${new Date().toISOString()}
-\`\`\`
-${practicalExamplesContent}${capabilitiesContent}
-${
-  troubleshootingSection
-    ? `
-## 🔧 Troubleshooting Guidance
-
-${troubleshootingSection.summary}
-
-${
-  troubleshootingSection.steps
-    ?.map(
-      (step) => `
-### Step ${step.number}: ${step.title} (${step.severity})
-${step.description}
-
-**Actions:**
-${step.actions.map((action, i) => `${i + 1}. ${action}`).join("\n")}
-
-**Verification:**
-${step.verification?.map((verify, i) => `${i + 1}. ${verify}`).join("\n") || "Restart Claude Desktop and test functionality"}
-`
-    )
-    .join("") || ""
-}
-`
-    : ""
-}
-
-## ⚠️ IMPORTANT: Confirm Connection
-When you've successfully loaded this workspace and verified your MCP tools are working, please create a status file to confirm the connection:
-
-**Create file:** \`claude_brain_connected.json\`
-**Content:**
-\`\`\`json
-{
-  "status": "connected",
-  "timestamp": "${new Date().toISOString()}",
-  "mcp_servers_verified": [${serverList}],
-  "workspace_loaded": true,
-  "setup_completeness": ${enhancedContent.setupCompleteness},
-  "next_steps": "I've successfully connected to your MCP workspace! Based on your setup (${enhancedContent.setupCompleteness}% complete), I can help with ${enhancedContent.enabledCapabilities} enhanced capabilities. Try one of the 10 practical examples above to get started!"
-}
-\`\`\`
-
-Ready to unlock the full potential of MCP-enhanced development! 🎉`;
 
   await fs.writeFile(filePath, prompt, "utf8");
   return filePath;

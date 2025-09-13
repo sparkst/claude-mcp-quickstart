@@ -103,6 +103,24 @@ export function generatePracticalExamples(
  * REQ-308: Highlight 10 specific capabilities enabled by MCP that weren't possible before
  */
 export function generateMcpCapabilities(configAnalysis) {
+  // REQ-402: Fix capability detection to work with actual MCP server arrays and built-in features
+  // P0-002: Comprehensive data structure normalization
+  let mcpServers = [];
+  if (configAnalysis) {
+    if (Array.isArray(configAnalysis.mcpServers)) {
+      mcpServers = configAnalysis.mcpServers;
+    } else if (Array.isArray(configAnalysis.servers?.servers)) {
+      mcpServers = configAnalysis.servers.servers;
+    } else if (configAnalysis.mcpServers && typeof configAnalysis.mcpServers === 'object') {
+      mcpServers = Object.keys(configAnalysis.mcpServers);
+    }
+  }
+  // Ensure mcpServers is always an array
+  mcpServers = Array.isArray(mcpServers) ? mcpServers : [];
+
+  const builtInFeatures = configAnalysis?.builtInFeatures || {};
+  const serverCapabilities = configAnalysis?.servers || {};
+
   const capabilities = [
     {
       title: "📁 Direct File System Access",
@@ -110,7 +128,7 @@ export function generateMcpCapabilities(configAnalysis) {
         "Read, write, and modify files in your project directory without copy-pasting",
       beforeMcp: "Had to manually copy code snippets back and forth",
       withMcp: "Claude can directly edit your files and see real-time changes",
-      enabled: configAnalysis?.servers?.hasFilesystem || false,
+      enabled: builtInFeatures?.filesystem?.available || serverCapabilities?.hasFilesystem || false,
     },
 
     {
@@ -120,7 +138,7 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Had to re-explain project context every conversation",
       withMcp:
         "Claude remembers your project architecture, decisions, and preferences",
-      enabled: configAnalysis?.servers?.servers?.includes("memory") || false,
+      enabled: mcpServers.some(s => s.toLowerCase().includes("memory")) || false,
     },
 
     {
@@ -130,9 +148,7 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Could only discuss database design theoretically",
       withMcp:
         "Claude can run queries, check schemas, and suggest optimizations directly",
-      enabled:
-        configAnalysis?.servers?.servers?.some((s) => s.includes("supabase")) ||
-        false,
+      enabled: mcpServers.some(s => s.toLowerCase().includes("supabase")) || false,
     },
 
     {
@@ -142,7 +158,7 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Limited to training data knowledge that might be outdated",
       withMcp:
         "Claude can fetch current documentation and examples from Context7",
-      enabled: configAnalysis?.servers?.hasContext7 || false,
+      enabled: builtInFeatures?.context7?.available || serverCapabilities?.hasContext7 || false,
     },
 
     {
@@ -151,7 +167,7 @@ export function generateMcpCapabilities(configAnalysis) {
         "Create issues, pull requests, and analyze repository patterns",
       beforeMcp: "Could only provide generic Git advice",
       withMcp: "Claude can interact with your actual repositories and workflow",
-      enabled: configAnalysis?.servers?.hasGitHub || false,
+      enabled: builtInFeatures?.github?.available || serverCapabilities?.hasGitHub || false,
     },
 
     {
@@ -160,7 +176,7 @@ export function generateMcpCapabilities(configAnalysis) {
         "Refactor code across multiple files while maintaining consistency",
       beforeMcp: "Manual coordination required for large refactoring tasks",
       withMcp: "Claude can modify multiple related files in a single operation",
-      enabled: configAnalysis?.servers?.hasFilesystem || false,
+      enabled: builtInFeatures?.filesystem?.available || serverCapabilities?.hasFilesystem || false,
     },
 
     {
@@ -170,7 +186,7 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Generic test examples that needed manual adaptation",
       withMcp:
         "Claude generates tests using your actual functions and data structures",
-      enabled: configAnalysis?.servers?.hasFilesystem || false,
+      enabled: builtInFeatures?.filesystem?.available || serverCapabilities?.hasFilesystem || false,
     },
 
     {
@@ -180,7 +196,7 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Could only provide general code quality advice",
       withMcp:
         "Claude can analyze your specific codebase and provide targeted recommendations",
-      enabled: configAnalysis?.servers?.hasFilesystem || false,
+      enabled: builtInFeatures?.filesystem?.available || serverCapabilities?.hasFilesystem || false,
     },
 
     {
@@ -190,7 +206,9 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Manual searching through files and documentation",
       withMcp:
         "Claude can search across your project and connected resources intelligently",
-      enabled: true, // Always available with basic MCP setup
+      enabled: mcpServers.some(s => s.toLowerCase().includes("tavily")) ||
+               builtInFeatures?.context7?.available || serverCapabilities?.hasContext7 ||
+               builtInFeatures?.github?.available || false,
     },
 
     {
@@ -200,7 +218,10 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Each tool interaction required separate manual steps",
       withMcp:
         "Claude can coordinate actions across databases, files, Git, and documentation",
-      enabled: (configAnalysis?.servers?.servers?.length || 0) >= 2,
+      enabled: (mcpServers.length +
+                (builtInFeatures?.filesystem?.available ? 1 : 0) +
+                (builtInFeatures?.github?.available ? 1 : 0) +
+                (builtInFeatures?.context7?.available ? 1 : 0)) >= 2,
     },
   ];
 
@@ -217,12 +238,18 @@ export function generateEnhancedPromptContent(
   projectType,
   configAnalysis
 ) {
+  // P0-004: Add configuration object validation with fallbacks
+  const safeConfigAnalysis = configAnalysis || {};
+  const safeMcpServers = Array.isArray(mcpServers) ? mcpServers : [];
+  const safeProjectPath = projectPath || '/unknown-project';
+  const safeProjectType = projectType || 'Unknown';
+
   const practicalExamples = generatePracticalExamples(
-    projectPath,
-    mcpServers,
-    projectType
+    safeProjectPath,
+    safeMcpServers,
+    safeProjectType
   );
-  const mcpCapabilities = generateMcpCapabilities(configAnalysis);
+  const mcpCapabilities = generateMcpCapabilities(safeConfigAnalysis);
 
   // Group examples by category for better organization
   const examplesByCategory = practicalExamples.reduce((acc, example) => {
@@ -243,9 +270,6 @@ export function generateEnhancedPromptContent(
     mcpCapabilities,
     enabledCapabilities,
     totalCapabilities,
-    setupCompleteness: Math.round(
-      (enabledCapabilities / totalCapabilities) * 100
-    ),
   };
 }
 
