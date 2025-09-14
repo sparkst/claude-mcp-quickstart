@@ -52,6 +52,7 @@ function escapeMarkdownPath(text) {
  * Smart escaping that detects potentially malicious content
  * REQ-401: Use human-readable escaping for clean paths, full escaping for malicious content
  * REQ-202: Detect and fully escape potentially malicious content
+ * P0-008: Enhanced malicious pattern detection
  */
 function escapePathSmart(text) {
   if (typeof text !== "string") return String(text);
@@ -64,7 +65,10 @@ function escapePathSmart(text) {
     /onerror=/i,
     /javascript:/i,
     /vbscript:/i,
-    /data:.*script/i
+    /data:.*script/i,
+    /on\w+=/i, // P0-008: Event handler attributes
+    /<iframe/i, // P0-008: Iframe injection
+    /style\s*=/i // P0-008: Style attribute injection
   ];
 
   const isMalicious = dangerousPatterns.some(pattern => pattern.test(text));
@@ -74,12 +78,19 @@ function escapePathSmart(text) {
     return escapeMarkdown(text);
   }
 
-  // Otherwise, use human-readable path escaping
-  return escapeMarkdownPath(text);
+  // P0-008: For legitimate paths, preserve readability by NOT escaping forward slashes
+  // REQ-401: Keep paths human-readable for copy-paste functionality
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+    // Note: Forward slashes (/) are NOT escaped to maintain path readability
 }
 
 /**
  * Safely formats server list for JSON context
+ * P0-006: Escape rather than filter to maintain data integrity
  */
 function formatServerList(mcpServers) {
   if (!Array.isArray(mcpServers)) return '"memory", "supabase"';
@@ -92,26 +103,33 @@ function formatServerList(mcpServers) {
 /**
  * Formats server list for JSON string context (with proper escaping)
  * REQ-202: Prevent template injection by escaping all server names
+ * P0-007: Escape rather than filter to prevent data loss
  */
 function formatServerListForJSON(mcpServers) {
   if (!Array.isArray(mcpServers)) return '"memory", "supabase"';
   return mcpServers
     .filter((s) => typeof s === "string" && s.trim())
-    .map((s) => `"${escapeMarkdown(s)}"`)
-    .join(", ");
+    .map((s) => {
+      // P0-007: Escape all potentially dangerous characters for JSON context
+      const escaped = escapeMarkdown(s);
+      return `"${escaped}"`;
+    })
+    .join(", ") || '"memory", "supabase"'; // P0-007: Fallback if no valid servers
 }
 
 /**
  * REQ-403: Use user's improved template with dynamic content insertion
+ * P0-001: Apply comprehensive template injection protection
  */
 function generateFromUserTemplate(projectPath, mcpServers, projectType, setupVerification, enhancedContent) {
   const timestamp = new Date().toISOString();
   const configPath = getClaudeConfigPath();
 
-  // REQ-401: Use human-readable path escaping for test compliance
-  const safePath = escapeMarkdownPath(projectPath); // Human-readable paths for REQ-401
+  // P0-001: Apply smart escaping to all user inputs to prevent template injection
+  // REQ-401: Use path-friendly escaping for directory paths to maintain readability
+  const safePath = escapePathSmart(projectPath);
   const safeType = escapeMarkdown(projectType);
-  const safeConfigPath = escapeMarkdownPath(configPath); // System path - minimal escaping for readability
+  const safeConfigPath = escapePathSmart(configPath);
 
   // Use user's improved template with dynamic insertions
   return `# 🧠 Claude Brain Connection
@@ -142,7 +160,7 @@ Use your memory to save:
 Primary workspace: ${safePath}
 Project type: ${safeType}
 Available MCP tools: ${formatServerListForJSON(mcpServers)}
-Available capabilities: ${enhancedContent.enabledCapabilities}/${enhancedContent.totalCapabilities}
+Available capabilities: ${parseInt(enhancedContent.enabledCapabilities) || 0}/${parseInt(enhancedContent.totalCapabilities) || 0}
 Context file: .claude-context (in project root)
 Last verified: ${timestamp}
 \`\`\`
@@ -166,12 +184,16 @@ ${cap.description}
 **With MCP:** ${cap.withMcp}
 `).join('')}
 
-**Capabilities Active: ${enhancedContent.enabledCapabilities}/${enhancedContent.totalCapabilities}**
+**Capabilities Active: ${parseInt(enhancedContent.enabledCapabilities) || 0}/${parseInt(enhancedContent.totalCapabilities) || 0}**
 
 
 
 ## ⚠️ IMPORTANT: Confirm Connection
 When you've successfully loaded this workspace and verified your MCP tools are working, please create a status file to confirm the connection:
+
+**File locations for reference:**
+- Connection prompt: \`${safePath}/connect_claude_brain.md\`
+- Status file to create: \`${safePath}/claude_brain_connected.json\`
 
 **Create file:** \`claude_brain_connected.json\`
 **Content:**
@@ -181,7 +203,7 @@ When you've successfully loaded this workspace and verified your MCP tools are w
   "timestamp": "${timestamp}",
   "mcp_servers_verified": [${formatServerListForJSON(mcpServers)}],
   "workspace_loaded": true,
-  "next_steps": "I've successfully connected to your MCP workspace! I can help with ${enhancedContent.enabledCapabilities} enhanced capabilities out of ${enhancedContent.totalCapabilities} available. Try one of the 10 practical examples above to get started!"
+  "next_steps": "I've successfully connected to your MCP workspace! I can help with ${parseInt(enhancedContent.enabledCapabilities) || 0} enhanced capabilities out of ${parseInt(enhancedContent.totalCapabilities) || 0} available. Try one of the 10 practical examples above to get started!"
 }
 \`\`\`
 

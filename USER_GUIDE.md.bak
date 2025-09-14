@@ -1,0 +1,268 @@
+# 🚀 MCP Quickstart User Guide
+
+> Complete guide to setting up and using Claude with MCP (Model Context Protocol) servers in under 60 seconds.
+
+## ⚡ Quick Start Workflow
+
+### 1. First Time Setup (Required)
+```bash
+npx mcp-quickstart
+```
+**What it does**: Interactive setup wizard that configures MCP servers
+**Creates**: Claude Desktop configuration file
+**Next step**: Restart Claude Desktop
+**Time**: ~60 seconds
+
+### 2. Project Integration (Per Project)
+```bash
+cd your-project
+npx mcp-quickstart dev-mode
+```
+**What it does**: Analyzes your project and generates Claude integration prompt
+**Creates**: `.claude-context` and `.claude-integration.md` files
+**Next step**: Copy the generated prompt to Claude
+**Time**: ~10 seconds
+
+### 3. Verify Everything Works
+```bash
+npx mcp-quickstart verify
+```
+**What it does**: Checks if your MCP setup is working correctly
+**Creates**: Nothing (read-only check)
+**Next step**: Fix any issues reported
+**Time**: ~5 seconds
+
+## 📋 Complete Commands Reference
+
+| Command | Purpose | When to Use | Output |
+|---------|---------|-------------|---------|
+| `npx mcp-quickstart` | Initial MCP server setup | First time only | Interactive wizard |
+| `npx mcp-quickstart setup` | Same as above | Alternative command | Same as above |
+| `npx mcp-quickstart dev-mode` | Generate project integration | In each project | Long Claude prompt |
+| `npx mcp-quickstart verify` | Check MCP configuration | Troubleshooting | Status report |
+| `npx mcp-quickstart quick-start` | Full setup + dev-mode | New project setup | Setup + prompt |
+| `npx mcp-quickstart --version` | Show version | Version checking | Version number |
+| `npx mcp-quickstart --help` | Show all commands | Need help | Command list |
+
+## 🛠️ Detailed Setup Guide
+
+### Step 1: Initial MCP Configuration
+
+1. **Run the setup command**:
+   ```bash
+   npx mcp-quickstart
+   ```
+
+2. **Follow the interactive prompts**:
+   ```
+   TPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPW
+   Q      MCP Quickstart by Sparkry.AI      Q
+   Q         First Time Setup Wizard        Q
+   ZPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP]
+
+   =� Brave Search (Private, no tracking)
+      Get free API key: https://api.search.brave.com/app/keys
+      (2,000 free searches/month)
+
+   Brave API Key: [paste your key here]
+   ```
+
+3. **Configure desired services**:
+   - **Brave Search**: Web search capabilities
+   - **Tavily Search**: Alternative web search
+   - **Memory**: Persistent conversation memory
+   - **Supabase**: Database integration
+
+4. **Restart Claude Desktop** (required for changes to take effect)
+
+### Step 2: Project Integration
+
+1. **Navigate to your project**:
+   ```bash
+   cd /path/to/your/project
+   ```
+
+2. **Generate integration prompt**:
+   ```bash
+   npx mcp-quickstart dev-mode
+   ```
+
+3. **Files created**:
+   - `.claude-context`: Project context for Claude
+   - `.claude-integration.md`: Generated prompt for Claude
+
+4. **Copy the prompt**: The command outputs a long prompt - copy it entirely
+
+5. **Paste into Claude**: Start a new conversation and paste the prompt
+
+### Step 3: Verification
+
+```bash
+npx mcp-quickstart verify
+```
+
+**Expected output**:
+```
+ Claude Desktop Configuration Found
+ MCP Servers Configured: 3
+ Workspace Directory Accessible
+ Project Context Available
+
+Your MCP setup is working correctly!
+```
+
+## =� Understanding Generated Files
+
+### `.claude-context` File
+```markdown
+Project: my-awesome-app
+Type: Node.js/React
+Dependencies: express, react, typescript
+Architecture: Full-stack web application
+```
+**Purpose**: Helps Claude understand your project structure
+**Should you edit**: Yes, add project-specific context
+**Should you commit**: Yes, helps team collaboration
+
+### `.claude-integration.md` File
+```markdown
+# >� Claude Brain Connection
+
+Hi Claude! Your MCP workspace is ready...
+[Long integration prompt]
+```
+**Purpose**: Ready-to-paste prompt for Claude
+**Should you edit**: No, regenerate if needed
+**Should you commit**: Optional, mainly for reference
+
+## = Troubleshooting Common Issues
+
+### Issue: "MCP servers not found"
+**Cause**: Claude Desktop not restarted after setup
+**Fix**: Restart Claude Desktop completely
+
+### Issue: "No configuration file"
+**Cause**: Setup command didn't complete successfully
+**Fix**: Run `npx mcp-quickstart` again
+
+### Issue: "API key invalid"
+**Cause**: Incorrect or expired API key
+**Fix**: Get new API key from provider links in setup
+
+### Issue: "Project not detected"
+**Cause**: Running dev-mode outside a project directory
+**Fix**: `cd` into your project folder first
+
+### Issue: "Permission denied"
+**Cause**: Claude Desktop config directory not writable
+**Fix**: Check file permissions or run as administrator
+
+## <� Usage Patterns
+
+### For Individual Developers
+1. **One-time**: `npx mcp-quickstart` (configure MCP servers)
+2. **Per project**: `npx mcp-quickstart dev-mode` (generate prompt)
+3. **When issues**: `npx mcp-quickstart verify` (check setup)
+
+### For Team Projects
+1. **Setup lead**: Runs full setup and commits `.claude-context`
+2. **Team members**: Run `npx mcp-quickstart` for their own MCP servers
+3. **Everyone**: Uses shared `.claude-context` for consistent project understanding
+
+### For CI/CD Integration
+```yaml
+# .github/workflows/claude-integration.yml
+- name: Generate Claude Context
+  run: npx mcp-quickstart dev-mode
+- name: Verify MCP Setup
+  run: npx mcp-quickstart verify
+```
+
+## =� Advanced Usage
+
+### Custom Configuration
+The setup wizard creates configuration at:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%/Claude/claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+### API Key Management
+- **Safe storage**: Keys are stored securely in Claude Desktop config
+- **Masked display**: Setup shows `sk-...3aF` instead of full keys
+- **Easy updates**: Run setup again to update keys
+- **Environment override**: Use env vars for CI/CD
+
+### Project Templates
+Create `.claude-context` templates for different project types:
+
+**Node.js API Template**:
+```markdown
+Project: {{PROJECT_NAME}}
+Type: Node.js API
+Framework: Express
+Database: PostgreSQL
+Testing: Jest
+Key Features:
+- RESTful API endpoints
+- Database ORM integration
+- Authentication middleware
+- Error handling patterns
+```
+
+## =� Best Practices
+
+### Security
+-  Never commit API keys to version control
+-  Use environment variables in CI/CD
+-  Regularly rotate API keys
+-  Keep Claude Desktop updated
+
+### Project Organization
+-  Commit `.claude-context` files
+-  Keep project context up to date
+-  Use descriptive project names
+-  Document special setup requirements
+
+### Team Collaboration
+-  Share `.claude-context` templates
+-  Document MCP server requirements
+-  Include setup steps in project README
+-  Verify setup works for new team members
+
+## <� Getting Help
+
+### Common Resources
+- **GitHub Issues**: [Report bugs or request features](https://github.com/sparkst/mcp-quickstart/issues)
+- **Documentation**: [Full documentation](https://github.com/sparkst/mcp-quickstart)
+- **Community**: [Discord or community forum]
+
+### Before Asking for Help
+1. Run `npx mcp-quickstart verify` to check your setup
+2. Check if Claude Desktop is restarted after configuration
+3. Verify API keys are valid and have proper permissions
+4. Try the setup process again with `npx mcp-quickstart`
+
+### Include in Bug Reports
+- Operating system and version
+- Output of `npx mcp-quickstart --version`
+- Output of `npx mcp-quickstart verify`
+- Any error messages (full text)
+- Steps to reproduce the issue
+
+---
+
+## <� Success Checklist
+
+After following this guide, you should have:
+
+-  MCP servers configured and running
+-  Claude Desktop restarted and recognizing MCP tools
+-  Project context files generated
+-  Integration prompt copied to Claude
+-  Verification showing all systems working
+
+**Next**: Start a conversation with Claude and try: `"Show me what MCP tools I have available"`
+
+You should see enhanced capabilities like file system access, web search, memory, and database integration working seamlessly!
+
+Ready to unlock the full potential of MCP-enhanced development! =�

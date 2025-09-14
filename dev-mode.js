@@ -363,7 +363,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       chalk.red("Error generating Claude integration:"),
       error.message
     );
-    process.exit(1);
+
+    // P0-011: Only exit if not in test environment, otherwise re-throw for testability
+    if (process.env.NODE_ENV === 'test') {
+      throw error;
+    } else {
+      process.exit(1);
+    }
   });
 }
 

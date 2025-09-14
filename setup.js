@@ -430,7 +430,13 @@ async function setupQuickstart() {
   } catch (error) {
     spinner.fail("Setup failed");
     console.error(chalk.red(error.message));
-    process.exit(1);
+
+    // P0-010: Only exit if not in test environment, otherwise re-throw for testability
+    if (process.env.NODE_ENV === 'test') {
+      throw error;
+    } else {
+      process.exit(1);
+    }
   }
 }
 

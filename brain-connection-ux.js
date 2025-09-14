@@ -10,6 +10,7 @@ import chalk from "chalk";
 
 /**
  * Escapes text for safe inclusion in content
+ * P0-005: Enhanced escaping for template injection prevention
  */
 function escapeText(text) {
   if (typeof text !== "string") return String(text);
@@ -18,9 +19,10 @@ function escapeText(text) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
-    .replace(/'/g, "'")
-    .replace(/\//g, "/")
-    .replace(/\\/g, "\\");
+    .replace(/'/g, "&#x27;")
+    .replace(/:/g, "&#x3A;") // P0-005: Escape colons to prevent javascript: injection
+    .replace(/\\/g, "&#x5C;") // Escape backslashes for security
+    .replace(/\//g, "&#x2F;"); // Escape forward slashes for security
 }
 
 /**
@@ -446,7 +448,7 @@ export function generateProfessionalUXMessaging(messageConfig) {
   let additionalProperties = {};
 
   if (type === "connection_ready") {
-    message = `🧠 Claude MCP Ready\n📁 Workspace: ${workspacePath}\n🔌 Services: ${servers.join(", ")}\n\n✨ Enhanced development capabilities now active`;
+    message = `🧠 Claude MCP Ready\n📁 Workspace: ${escapeText(workspacePath)}\n🔌 Services: ${servers.map(s => escapeText(s)).join(", ")}\n\n✨ Enhanced development capabilities now active`;
     additionalProperties.developerFriendly = true;
     additionalProperties.style = "professional";
   } else if (type === "next_steps" && context) {
@@ -463,7 +465,7 @@ export function generateProfessionalUXMessaging(messageConfig) {
     additionalProperties.guidance = guidance;
     additionalProperties.specific = true;
   } else if (type === "error") {
-    message = `Error: ${escapeText(error)}`;
+    message = `Error: ${escapeText(String(error || 'Unknown error'))}`;
     additionalProperties.errorHandlingPreserved = true;
     additionalProperties.sanitizedInput = escapeText(userInput || "");
   } else if (type === "status_update") {

@@ -79,7 +79,7 @@ describe("P0 Critical Issues - Failing Tests", () => {
 
       // EXPECTED: Clean paths should not be HTML-encoded for readability
       // This test will FAIL because the current escaping is too aggressive
-      expect(capturedContent).toMatch(new RegExp(`Primary workspace: [^&]*${cleanPath.replace(/\//g, '\/')}`));
+      expect(capturedContent).toMatch(new RegExp(`Primary workspace: [^&]*${cleanPath.replace(/\//g, '/')}`));
       expect(capturedContent).not.toContain("&#x2F;Users&#x2F;travis&#x2F;Documents");
       expect(capturedContent).not.toContain("&#x2F;claude-mcp-quickstart");
     });

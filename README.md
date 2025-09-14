@@ -25,18 +25,101 @@ claude-mcp-quickstart
 npx claude-mcp-quickstart
 ```
 
-### Available Commands
-- `claude-mcp-quickstart setup` - Configure MCP servers
-- `claude-mcp-quickstart dev-mode` - Generate Claude integration prompt with workspace context
-- `claude-mcp-quickstart verify` - Verify current configuration
-- `claude-mcp-quickstart quick-start` - Complete setup with all features
+## 📋 Command Guide & Workflows
+
+### First-Time Setup Workflow
+```bash
+# Step 1: Configure MCP servers (required once)
+npx claude-mcp-quickstart
+# → Creates Claude Desktop configuration
+# → Restart Claude Desktop after completion
+
+# Step 2: Generate project integration (per project)
+cd your-project
+npx claude-mcp-quickstart dev-mode
+# → Creates .claude-context and .claude-integration.md
+# → Copy the generated prompt to Claude
+
+# Step 3: Verify everything works
+npx claude-mcp-quickstart verify
+# → Checks MCP configuration status
+```
+
+### Command Reference
+
+| Command | Purpose | Output | When to Use |
+|---------|---------|---------|-------------|
+| `npx claude-mcp-quickstart` | Interactive MCP server setup | Configuration file | First time setup |
+| `npx claude-mcp-quickstart setup` | Same as above | Same as above | Alternative command |
+| `npx claude-mcp-quickstart dev-mode` | Generate Claude integration prompt | Long text prompt + files | In each project |
+| `npx claude-mcp-quickstart verify` | Check MCP configuration | Status report | Troubleshooting |
+| `npx claude-mcp-quickstart quick-start` | Setup + dev-mode combined | Setup wizard + prompt | New project setup |
+| `npx claude-mcp-quickstart --version` | Show version | Version number | Version checking |
+| `npx claude-mcp-quickstart --help` | Show help | Command list | Need assistance |
+
+### Understanding Command Outputs
+
+**Setup Commands** (`npx claude-mcp-quickstart`):
+- Shows interactive wizard with API key prompts
+- Creates/updates Claude Desktop configuration file
+- **Next step**: Restart Claude Desktop
+
+**Dev-Mode Command** (`npx claude-mcp-quickstart dev-mode`):
+- Outputs a long integration prompt to your terminal
+- Creates `.claude-context` and `.claude-integration.md` files
+- **Next step**: Copy the terminal output and paste into Claude
+
+**Verify Command** (`npx claude-mcp-quickstart verify`):
+- Shows status of your MCP configuration
+- Reports issues with setup if any
+- **Next step**: Fix reported issues or you're ready to go
 
 ### Development Setup
 ```bash
 npm install
-npm test              # Run all tests (291 tests)
+npm test              # Run all tests (47 brain-connection tests, 291+ total)
 npm run typecheck     # TypeScript validation
 ```
+
+## 🛠️ Troubleshooting
+
+### Common Issues & Solutions
+
+**Issue**: "MCP servers not found in Claude"
+- **Cause**: Claude Desktop not restarted after setup
+- **Fix**: Completely restart Claude Desktop application
+
+**Issue**: "Command not found" or "package not found"
+- **Cause**: Package not installed or PATH issue
+- **Fix**: Use `npx claude-mcp-quickstart` instead of global install
+
+**Issue**: "Invalid API key" during setup
+- **Cause**: Incorrect API key format or expired key
+- **Fix**: Get new API key from provider links shown in setup wizard
+
+**Issue**: "Permission denied" when creating config
+- **Cause**: Claude Desktop config directory not writable
+- **Fix**: Run with appropriate permissions or check directory ownership
+
+**Issue**: "No project detected" in dev-mode
+- **Cause**: Running dev-mode outside a project directory
+- **Fix**: `cd` into your project folder first
+
+**Issue**: Long prompt output in dev-mode is confusing
+- **Expected**: This is the integration prompt for Claude
+- **Action**: Copy the entire output and paste it into a new Claude conversation
+
+### Verification Steps
+Always run these to check your setup:
+```bash
+npx claude-mcp-quickstart --version    # Should show current version
+npx claude-mcp-quickstart verify       # Should show ✅ status messages
+```
+
+### Getting Help
+- **Documentation**: See [USER_GUIDE.md](./USER_GUIDE.md) for step-by-step instructions
+- **Issues**: Report bugs at [GitHub Issues](https://github.com/sparkst/mcp-quickstart/issues)
+- **Before reporting**: Include output of `npx claude-mcp-quickstart verify`
 
 ## Architecture Overview
 
@@ -90,6 +173,8 @@ claude-mcp-quickstart/
 ├── CHANGELOG.md        # Version history and changes
 ├── MIGRATION.md        # Migration guide for existing users
 ├── ARCHITECTURE.md     # Claude Desktop architecture reference
+├── TEST_ARCHITECTURE.md # Test suite architecture and REQ-402 refactoring documentation
+├── docs/TESTING_PATTERNS.md # Quick reference for modern testing patterns
 ├── package.json        # NPM configuration
 ├── index.js           # CLI entry point
 ├── setup.js           # Main setup logic & token security
@@ -193,7 +278,7 @@ This provides better performance and native integration.
 - **Deprecation Safety**: Confirmation prompts before proceeding with deprecated servers
 - **Configuration Protection**: Atomic file writes and JSON parsing with error recovery
 - **Migration Security**: Existing tokens preserved during configuration updates
-- **Comprehensive Testing**: 291 tests covering architectural validation, security patterns, injection prevention, and reliability flows
+- **Comprehensive Testing**: 291+ tests covering architectural validation, security patterns, injection prevention, capability counting systems, and reliability flows
 
 ## Development
 
@@ -221,7 +306,7 @@ Windows compatibility is ensured through a custom Vite plugin that handles sheba
 ### Code Quality
 - **Prettier** for consistent formatting
 - **ESLint** for code quality
-- **291 comprehensive tests** covering core functionality, architectural validation, security injection prevention, and reliability flows
+- **291+ comprehensive tests** including 47 brain-connection tests covering architectural validation, security injection prevention, and capability counting systems
 - **Vitest** for fast, modern testing
 - **Security-First Testing**: Dedicated test suite for template injection, XSS prevention, and error boundaries
 
@@ -321,3 +406,5 @@ For version history and changes, see [CHANGELOG.md](./CHANGELOG.md).
 For migration from previous versions, see [MIGRATION.md](./MIGRATION.md).
 
 For Claude Desktop architecture reference, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+
+For test suite architecture and REQ-402 refactoring details, see [TEST_ARCHITECTURE.md](./TEST_ARCHITECTURE.md).
