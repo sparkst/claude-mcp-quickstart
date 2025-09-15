@@ -75,43 +75,7 @@ Brave API Key [Current: sk-Bv...3aF] (Enter to keep, or paste new):
 - **Zero confusion** - We handle all the complexity
 - **Enhanced Security** - Enterprise-grade protection built-in
 
-### For Existing Users
-- **Preserves your config** - Never loses your API keys
-- **Smart updates** - Only changes what you modify
-- **Add services anytime** - Run `npx mcp-quickstart setup`
-- **Seamless Migration** - Graceful transition from deprecated features
 
-## 💪 Real Examples
-
-### Enhanced Security in Action
-```
-✅ Before: User input could potentially execute scripts
-❌ After: All inputs sanitized and safely escaped
-```
-
-### Simplified Status Display
-```
-Old (v2.2.0):  Setup Completeness: 73% (confusing)
-New (v2.4.0):  Capabilities Active: 7/10 ✅ (clear)
-```
-
-### Better Architecture Understanding
-```
-Old: "GitHub MCP server not working" (incorrect)
-New: "Enable GitHub in Settings → Connectors" (correct)
-```
-
-## 🔄 Breaking Changes & Migration
-
-### setupCompleteness Removal
-- **Impact**: Templates no longer show percentage completeness
-- **Migration**: Automatic - new format shows "Capabilities Active: X/Y"
-- **Benefit**: Much clearer for users to understand their setup
-
-### Architecture-Aware Guidance
-- **Impact**: Different troubleshooting advice for built-in vs MCP tools
-- **Migration**: Automatic - users get correct guidance
-- **Benefit**: No more confusion about how to fix issues
 
 ## 🌟 Built by Sparkry.AI
 

@@ -1,0 +1,42 @@
+{
+  "githubActionsWorkflow": "# .github/workflows/cross-platform-performance.yml\nname: Cross-Platform Performance Testing\n\non:\n  push:\n    branches: [ main, develop ]\n  pull_request:\n    branches: [ main ]\n  schedule:\n    - cron: '0 2 * * *'  # Daily at 2 AM\n\njobs:\n  performance-matrix:\n    runs-on: ${{ matrix.os }}\n    strategy:\n      matrix:\n        os: [ubuntu-latest, windows-latest, macos-latest]\n        node-version: [18.x, 20.x, 22.x]\n\n    steps:\n    - uses: actions/checkout@v4\n\n    - name: Setup Node.js ${{ matrix.node-version }}\n      uses: actions/setup-node@v4\n      with:\n        node-version: ${{ matrix.node-version }}\n\n    - name: Install dependencies\n      run: npm ci\n\n    - name: Run performance benchmarks\n      run: npm run benchmark\n\n    - name: Cross-platform consistency check\n      run: node cross-platform-validator.js\n\n    - name: Upload performance results\n      uses: actions/upload-artifact@v4\n      with:\n        name: performance-results-${{ matrix.os }}-${{ matrix.node-version }}\n        path: .performance/\n\n  consistency-analysis:\n    needs: performance-matrix\n    runs-on: ubuntu-latest\n    steps:\n    - name: Download all results\n      uses: actions/download-artifact@v4\n\n    - name: Analyze cross-platform consistency\n      run: node analyze-platform-consistency.js\n\n    - name: Generate consistency report\n      run: node generate-consistency-report.js",
+  "performanceTargetsByPlatform": {
+    "darwin": {
+      "versionCommand": {
+        "target": 60,
+        "warning": 80,
+        "critical": 120
+      },
+      "helpCommand": {
+        "target": 80,
+        "warning": 100,
+        "critical": 150
+      }
+    },
+    "win32": {
+      "versionCommand": {
+        "target": 80,
+        "warning": 120,
+        "critical": 200
+      },
+      "helpCommand": {
+        "target": 100,
+        "warning": 150,
+        "critical": 250
+      }
+    },
+    "linux": {
+      "versionCommand": {
+        "target": 60,
+        "warning": 90,
+        "critical": 150
+      },
+      "helpCommand": {
+        "target": 80,
+        "warning": 120,
+        "critical": 200
+      }
+    }
+  },
+  "testingScript": "#!/usr/bin/env node\n// cross-platform-validator.js\n\nimport { platform } from 'os';\nimport { runBenchmarks } from './performance-monitor.js';\n\nconst PLATFORM_TARGETS = {\n  darwin: { version: 60, help: 80 },\n  win32: { version: 80, help: 100 },\n  linux: { version: 60, help: 80 }\n};\n\nasync function validateCrossPlatformPerformance() {\n  const currentPlatform = platform();\n  const targets = PLATFORM_TARGETS[currentPlatform];\n\n  if (!targets) {\n    console.warn(`⚠️ No performance targets defined for platform: ${currentPlatform}`);\n    return;\n  }\n\n  console.log(`🔍 Validating performance on ${currentPlatform}`);\n\n  const results = await runBenchmarks();\n\n  let allPassed = true;\n\n  for (const [command, result] of Object.entries(results)) {\n    const target = targets[command];\n    if (target && result.median > target) {\n      console.error(`❌ ${command}: ${result.median}ms > ${target}ms target`);\n      allPassed = false;\n    } else {\n      console.log(`✅ ${command}: ${result.median}ms ≤ ${target}ms target`);\n    }\n  }\n\n  if (!allPassed) {\n    process.exit(1);\n  }\n}\n\nvalidateCrossPlatformPerformance().catch(console.error);"
+}

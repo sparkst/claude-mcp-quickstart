@@ -1,62 +1,66 @@
-# Current Requirements - CLAUDE.md Development Workflow Analysis
+# Requirements Lock - UX Flow Analysis & USER_GUIDE.md Update Strategy
 
-> **SCOPE**: Analyze and create comprehensive overview of the CLAUDE.md development workflow including core principles, TDD enforcement, QShortcuts, and sub-agent roles for implementing new features following QNEW protocol.
+> **SNAPSHOT DATE**: September 14, 2025
+> **SCOPE**: Analyze current optimized UX state and create comprehensive strategy for deploying specialized agents to update USER_GUIDE.md based on actual implemented flows and recent UX optimization findings.
 
-## REQ-101: Document Core Principles and Rules
-- Acceptance: Complete documentation of all 7 core principle categories with MUST/SHOULD requirements
-- Coverage: Before Coding (BP-1 to BP-3), While Coding (C-1 to C-5), Testing (T-1 to T-4), Database (D-1 to D-2), Organization (O-1 to O-2), Documentation (DOC-1 to DOC-4), Tooling Gates (G-1 to G-2)
-- Output: Structured overview with enforcement levels and practical guidance
+## REQ-401: Analyze Current UX Optimization State
+- Acceptance: Complete analysis of latest UX review findings and current implementation state
+- Coverage: Review `/ux-reviews/2025-09-14-21-31-comprehensive-flow-review.md` findings (A- grade, 92/100 score)
+- Critical Issues: High severity unknown command behavior, medium severity prompt length and setup resumability
+- Performance: 95% onboarding success rate, 98% returning user success rate
+- Non-Goals: Creating new UX features (analysis only)
 
-## REQ-102: Document Requirements Discipline Pattern
-- Acceptance: Complete explanation of requirements.lock pattern workflow
-- Coverage: current.md canonical source, requirements.lock.md snapshot mechanism, REQ ID referencing in tests
-- Template: Include minimal template structure for requirements documentation
-- Integration: Show how pattern integrates with QNEW/QPLAN workflows
+## REQ-402: Assess Current User Guide Accuracy
+- Acceptance: Identify gaps between current USER_GUIDE.md and actual implemented UX flows
+- Current State: USER_GUIDE.md shows basic 3-step workflow (setup, dev-mode, verify)
+- Missing Elements: Error recovery flows, accessibility features, performance optimizations
+- Outdated Elements: Command examples that may trigger unknown command behavior issue
+- Integration: Verify README.md cross-references and consistency
 
-## REQ-103: Document TDD Enforcement Flow
-- Acceptance: Complete 6-step TDD enforcement flow with agent assignments
-- Steps: QNEW/QPLAN (planner + docs-writer), QCODE (test-writer first), implementation, QCHECK phases, QDOC, QGIT
-- Agent Roles: Specific agent responsibilities at each phase
-- Enforcement: How test-writer blocks implementation without failing tests
+## REQ-403: Design Parallel Agent Deployment Strategy
+- Acceptance: Create strategy for deploying specialized agents to analyze different UX aspects
+- Agent Assignments:
+  - **CLI UX Agent**: Command interface, help system, error handling flows
+  - **Onboarding Agent**: Setup experience, first-time user journey, token management
+  - **Performance Agent**: Speed optimizations impact on UX, loading states, feedback
+  - **Security Agent**: Security features user experience, token masking, validation flows
+  - **Accessibility Agent**: Keyboard navigation, screen reader compatibility, visual design
+  - **Documentation Agent**: Help system UX, troubleshooting clarity, cross-references
+- Coordination: Parallel execution with consolidated findings integration
 
-## REQ-104: Document QShortcuts and Usage Guidance
-- Acceptance: All 8 QShortcuts documented with exact commands and agent assignments
-- Commands: QNEW, QPLAN, QCODE, QCHECK, QCHECKF, QCHECKT, QUX, QDOC, QGIT
-- Agent Mapping: Which agents activate for each shortcut and when
-- Usage Context: When each shortcut should be used in development workflow
+## REQ-404: Plan USER_GUIDE.md Restructuring Requirements
+- Acceptance: Comprehensive update specification based on UX analysis findings
+- Structure Updates: Reflect actual 95% success rate onboarding flow
+- Content Updates: Include error recovery procedures, accessibility features
+- Command Updates: Fix unknown command behavior examples, add proper error handling
+- Integration Updates: Ensure README.md integration points remain accurate
+- Success Metrics: Align with actual performance data (3-5 min setup, 10-30 sec returning user)
 
-## REQ-105: Document Sub-Agent Suite Roles
-- Acceptance: Complete catalog of specialized agents and their responsibilities
-- Agents: planner, docs-writer, test-writer, PE-Reviewer, security-reviewer, debugger, ux-tester, release-manager
-- Specializations: When security-reviewer activates (auth/network/fs/templates/db/crypto)
-- Coordination: How agents work together in multi-phase operations
+## REQ-405: Verify README.md Integration Consistency
+- Acceptance: Ensure README.md properly references updated user guidance
+- Cross-References: Command guide table consistency with USER_GUIDE.md
+- Workflow Examples: Setup → dev-mode → verify flow accuracy
+- Troubleshooting: Common issues alignment between documents
+- Performance Claims: Verify performance metrics consistency across documents
 
-## REQ-106: Document Function Writing Best Practices
-- Acceptance: Complete 8-point function evaluation checklist
-- Checklist: Readability, cyclomatic complexity, data structures, unused parameters, type casts, testability, dependencies, naming
-- Refactoring Rules: When NOT to refactor and compelling reasons for refactoring
-- Quality Gates: Practical evaluation criteria for function quality
-
-## REQ-107: Document Testing Best Practices
-- Acceptance: Complete 11-point test evaluation checklist
-- Coverage: Parameterization, real defect testing, description alignment, independent expectations, code quality, property-based testing, grouping, assertions, edge cases, type checker integration
-- Property-Based: Include fast-check library example for algorithmic testing
-- Integration: How testing practices align with TDD enforcement flow
-
-## REQ-108: Create Actionable Implementation Guide
-- Acceptance: Step-by-step guide for implementing new features using this workflow
-- Workflow: From QNEW through QGIT with decision points and agent handoffs
-- Examples: Practical examples of requirement writing, test creation, and implementation
-- Troubleshooting: Common issues and solutions in workflow execution
+## REQ-406: Create Comprehensive UX Flow Documentation
+- Acceptance: Document actual implemented UX flows for future reference
+- Flow Mapping: Installation → Setup → Project Integration → Verification
+- Error Scenarios: Map error recovery flows and user guidance paths
+- Success Paths: Document 95% onboarding and 98% returning user flows
+- Performance Data: Include actual timing metrics and success rates
+- Accessibility Features: Document keyboard navigation and screen reader support
 
 ## Non-Goals
-- Creating new workflow processes (document existing CLAUDE.md workflow only)
-- Modifying existing requirements files (analysis and documentation only)
-- Implementing code changes (pure documentation and analysis task)
+- Implementing new UX features (analysis and documentation only)
+- Modifying command behavior (documentation update only)
+- Creating new agent implementations (deployment strategy only)
+- Changing core workflow structure (documenting existing optimized flows)
 
 ## Success Criteria
-1. Complete understanding of all CLAUDE.md workflow components
-2. Actionable guidance for new feature development
-3. Clear agent role definitions and handoff procedures
-4. Comprehensive best practices documentation
-5. Requirements properly documented and locked per QNEW protocol
+1. Accurate understanding of current optimized UX state
+2. Comprehensive agent deployment strategy for parallel analysis
+3. USER_GUIDE.md update requirements that reflect actual user experience
+4. README.md integration verification ensuring consistency
+5. Complete UX flow documentation for future reference
+6. Agent coordination plan for efficient parallel execution
