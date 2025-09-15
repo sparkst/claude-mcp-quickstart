@@ -1,11 +1,7 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "fs/promises";
-import {
-  createBrainConnectionFile,
-} from "./brain-connection.js";
-import {
-  generateEnhancedPromptContent,
-} from "./brain-connection-ux.js";
+import { createBrainConnectionFile } from "./brain-connection.js";
+import { generateEnhancedPromptContent } from "./brain-connection-ux.js";
 
 // Mock the setup-diagnostics module
 vi.mock("./setup-diagnostics.js", () => ({
@@ -13,7 +9,7 @@ vi.mock("./setup-diagnostics.js", () => ({
     success: true,
     analysis: { mcpServers: [], builtInFeatures: {} },
     summary: { filesystemEnabled: true, totalServers: 0 },
-    troubleshooting: {}
+    troubleshooting: {},
   }),
 }));
 
@@ -26,7 +22,7 @@ vi.mock("./brain-connection-ux.js", async () => {
       practicalExamples: [],
       mcpCapabilities: [],
       enabledCapabilities: 0,
-      totalCapabilities: 10
+      totalCapabilities: 10,
     }),
   };
 });
@@ -56,7 +52,9 @@ describe("P0 Critical Issues - Failing Tests", () => {
       // BUG: Line 111 in brain-connection.js currently uses escapePathSmart(projectPath)
       // It should use escapeMarkdownPath(projectPath) for human readability
       // This test will fail if paths are over-escaped with &#x2F; making them unreadable
-      const projectDirectorySection = capturedContent.match(/Project Directory\*\*: `([^`]+)`/);
+      const projectDirectorySection = capturedContent.match(
+        /Project Directory\*\*: `([^`]+)`/
+      );
       expect(projectDirectorySection).toBeTruthy();
 
       const extractedPath = projectDirectorySection[1];
@@ -79,8 +77,12 @@ describe("P0 Critical Issues - Failing Tests", () => {
 
       // EXPECTED: Clean paths should not be HTML-encoded for readability
       // This test will FAIL because the current escaping is too aggressive
-      expect(capturedContent).toMatch(new RegExp(`Primary workspace: [^&]*${cleanPath.replace(/\//g, '/')}`));
-      expect(capturedContent).not.toContain("&#x2F;Users&#x2F;travis&#x2F;Documents");
+      expect(capturedContent).toMatch(
+        new RegExp(`Primary workspace: [^&]*${cleanPath.replace(/\//g, "/")}`)
+      );
+      expect(capturedContent).not.toContain(
+        "&#x2F;Users&#x2F;travis&#x2F;Documents"
+      );
       expect(capturedContent).not.toContain("&#x2F;claude-mcp-quickstart");
     });
 
@@ -103,14 +105,13 @@ describe("P0 Critical Issues - Failing Tests", () => {
     });
   });
 
-
   describe("REQ-202: Template Injection Vulnerability", () => {
     test("REQ-202 — MCP server names with script tags are properly escaped in generated content", async () => {
       const projectPath = "/security-test";
       const maliciousServers = [
         "memory",
-        '<img src=x onerror=alert(1)>', // Malicious server name
-        "supabase"
+        "<img src=x onerror=alert(1)>", // Malicious server name
+        "supabase",
       ];
       const projectType = "Node.js";
 
@@ -120,14 +121,18 @@ describe("P0 Critical Issues - Failing Tests", () => {
         return Promise.resolve();
       });
 
-      await createBrainConnectionFile(projectPath, maliciousServers, projectType);
+      await createBrainConnectionFile(
+        projectPath,
+        maliciousServers,
+        projectType
+      );
 
       // EXPECTED: Script tags should NOT appear unescaped in the output
       // This test will FAIL if formatServerList functions don't properly escape server names
-      expect(capturedContent).not.toContain('<img src=x onerror=alert(1)>');
+      expect(capturedContent).not.toContain("<img src=x onerror=alert(1)>");
 
       // The malicious content should be properly escaped
-      expect(capturedContent).toContain('&lt;img src=x onerror=alert(1)&gt;');
+      expect(capturedContent).toContain("&lt;img src=x onerror=alert(1)&gt;");
     });
 
     test("REQ-202 — formatServerList and formatServerListForJSON prevent script injection", async () => {
@@ -136,7 +141,7 @@ describe("P0 Critical Issues - Failing Tests", () => {
         "memory",
         "</script><script>malicious()</script>",
         "supabase",
-        "javascript:alert('xss')"
+        "javascript:alert('xss')",
       ];
 
       let capturedContent = "";
@@ -145,15 +150,23 @@ describe("P0 Critical Issues - Failing Tests", () => {
         return Promise.resolve();
       });
 
-      await createBrainConnectionFile(projectPath, scriptInjectionServers, "Vue.js");
+      await createBrainConnectionFile(
+        projectPath,
+        scriptInjectionServers,
+        "Vue.js"
+      );
 
       // EXPECTED: No unescaped script tags should appear anywhere in the content
       // This test will FAIL if the formatServerList functions don't escape properly
-      expect(capturedContent).not.toContain('</script><script>malicious()</script>');
+      expect(capturedContent).not.toContain(
+        "</script><script>malicious()</script>"
+      );
       expect(capturedContent).not.toContain("javascript:alert('xss')");
 
       // Should contain escaped versions in both JSON contexts
-      expect(capturedContent).toContain('&lt;&#x2F;script&gt;&lt;script&gt;malicious()&lt;&#x2F;script&gt;');
+      expect(capturedContent).toContain(
+        "&lt;&#x2F;script&gt;&lt;script&gt;malicious()&lt;&#x2F;script&gt;"
+      );
       expect(capturedContent).toContain("javascript&#x3A;alert('xss')");
     });
 
@@ -162,7 +175,7 @@ describe("P0 Critical Issues - Failing Tests", () => {
       const dangerousServers = [
         "memory",
         '"malicious":"injection"',
-        "supabase"
+        "supabase",
       ];
 
       let capturedContent = "";
@@ -178,9 +191,13 @@ describe("P0 Critical Issues - Failing Tests", () => {
       expect(capturedContent).not.toContain('"malicious":"injection"');
 
       // Should appear escaped in the JSON status template
-      const jsonStatusMatch = capturedContent.match(/"mcp_servers_verified": \[(.*?)\]/);
+      const jsonStatusMatch = capturedContent.match(
+        /"mcp_servers_verified": \[(.*?)\]/
+      );
       expect(jsonStatusMatch).toBeTruthy();
-      expect(jsonStatusMatch[1]).toContain('&quot;malicious&quot;&#x3A;&quot;injection&quot;');
+      expect(jsonStatusMatch[1]).toContain(
+        "&quot;malicious&quot;&#x3A;&quot;injection&quot;"
+      );
     });
   });
 });

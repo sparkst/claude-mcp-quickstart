@@ -113,7 +113,10 @@ export function generateMcpCapabilities(configAnalysis) {
       mcpServers = configAnalysis.mcpServers;
     } else if (Array.isArray(configAnalysis.servers?.servers)) {
       mcpServers = configAnalysis.servers.servers;
-    } else if (configAnalysis.mcpServers && typeof configAnalysis.mcpServers === 'object') {
+    } else if (
+      configAnalysis.mcpServers &&
+      typeof configAnalysis.mcpServers === "object"
+    ) {
       mcpServers = Object.keys(configAnalysis.mcpServers);
     }
   }
@@ -130,7 +133,10 @@ export function generateMcpCapabilities(configAnalysis) {
         "Read, write, and modify files in your project directory without copy-pasting",
       beforeMcp: "Had to manually copy code snippets back and forth",
       withMcp: "Claude can directly edit your files and see real-time changes",
-      enabled: builtInFeatures?.filesystem?.available || serverCapabilities?.hasFilesystem || false,
+      enabled:
+        builtInFeatures?.filesystem?.available ||
+        serverCapabilities?.hasFilesystem ||
+        false,
     },
 
     {
@@ -140,7 +146,8 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Had to re-explain project context every conversation",
       withMcp:
         "Claude remembers your project architecture, decisions, and preferences",
-      enabled: mcpServers.some(s => s.toLowerCase().includes("memory")) || false,
+      enabled:
+        mcpServers.some((s) => s.toLowerCase().includes("memory")) || false,
     },
 
     {
@@ -150,7 +157,8 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Could only discuss database design theoretically",
       withMcp:
         "Claude can run queries, check schemas, and suggest optimizations directly",
-      enabled: mcpServers.some(s => s.toLowerCase().includes("supabase")) || false,
+      enabled:
+        mcpServers.some((s) => s.toLowerCase().includes("supabase")) || false,
     },
 
     {
@@ -160,7 +168,10 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Limited to training data knowledge that might be outdated",
       withMcp:
         "Claude can fetch current documentation and examples from Context7",
-      enabled: builtInFeatures?.context7?.available || serverCapabilities?.hasContext7 || false,
+      enabled:
+        builtInFeatures?.context7?.available ||
+        serverCapabilities?.hasContext7 ||
+        false,
     },
 
     {
@@ -169,7 +180,10 @@ export function generateMcpCapabilities(configAnalysis) {
         "Create issues, pull requests, and analyze repository patterns",
       beforeMcp: "Could only provide generic Git advice",
       withMcp: "Claude can interact with your actual repositories and workflow",
-      enabled: builtInFeatures?.github?.available || serverCapabilities?.hasGitHub || false,
+      enabled:
+        builtInFeatures?.github?.available ||
+        serverCapabilities?.hasGitHub ||
+        false,
     },
 
     {
@@ -178,7 +192,10 @@ export function generateMcpCapabilities(configAnalysis) {
         "Refactor code across multiple files while maintaining consistency",
       beforeMcp: "Manual coordination required for large refactoring tasks",
       withMcp: "Claude can modify multiple related files in a single operation",
-      enabled: builtInFeatures?.filesystem?.available || serverCapabilities?.hasFilesystem || false,
+      enabled:
+        builtInFeatures?.filesystem?.available ||
+        serverCapabilities?.hasFilesystem ||
+        false,
     },
 
     {
@@ -188,7 +205,10 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Generic test examples that needed manual adaptation",
       withMcp:
         "Claude generates tests using your actual functions and data structures",
-      enabled: builtInFeatures?.filesystem?.available || serverCapabilities?.hasFilesystem || false,
+      enabled:
+        builtInFeatures?.filesystem?.available ||
+        serverCapabilities?.hasFilesystem ||
+        false,
     },
 
     {
@@ -198,7 +218,10 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Could only provide general code quality advice",
       withMcp:
         "Claude can analyze your specific codebase and provide targeted recommendations",
-      enabled: builtInFeatures?.filesystem?.available || serverCapabilities?.hasFilesystem || false,
+      enabled:
+        builtInFeatures?.filesystem?.available ||
+        serverCapabilities?.hasFilesystem ||
+        false,
     },
 
     {
@@ -208,9 +231,12 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Manual searching through files and documentation",
       withMcp:
         "Claude can search across your project and connected resources intelligently",
-      enabled: mcpServers.some(s => s.toLowerCase().includes("tavily")) ||
-               builtInFeatures?.context7?.available || serverCapabilities?.hasContext7 ||
-               builtInFeatures?.github?.available || false,
+      enabled:
+        mcpServers.some((s) => s.toLowerCase().includes("tavily")) ||
+        builtInFeatures?.context7?.available ||
+        serverCapabilities?.hasContext7 ||
+        builtInFeatures?.github?.available ||
+        false,
     },
 
     {
@@ -220,10 +246,12 @@ export function generateMcpCapabilities(configAnalysis) {
       beforeMcp: "Each tool interaction required separate manual steps",
       withMcp:
         "Claude can coordinate actions across databases, files, Git, and documentation",
-      enabled: (mcpServers.length +
-                (builtInFeatures?.filesystem?.available ? 1 : 0) +
-                (builtInFeatures?.github?.available ? 1 : 0) +
-                (builtInFeatures?.context7?.available ? 1 : 0)) >= 2,
+      enabled:
+        mcpServers.length +
+          (builtInFeatures?.filesystem?.available ? 1 : 0) +
+          (builtInFeatures?.github?.available ? 1 : 0) +
+          (builtInFeatures?.context7?.available ? 1 : 0) >=
+        2,
     },
   ];
 
@@ -243,8 +271,8 @@ export function generateEnhancedPromptContent(
   // P0-004: Add configuration object validation with fallbacks
   const safeConfigAnalysis = configAnalysis || {};
   const safeMcpServers = Array.isArray(mcpServers) ? mcpServers : [];
-  const safeProjectPath = projectPath || '/unknown-project';
-  const safeProjectType = projectType || 'Unknown';
+  const safeProjectPath = projectPath || "/unknown-project";
+  const safeProjectType = projectType || "Unknown";
 
   const practicalExamples = generatePracticalExamples(
     safeProjectPath,
@@ -448,7 +476,7 @@ export function generateProfessionalUXMessaging(messageConfig) {
   let additionalProperties = {};
 
   if (type === "connection_ready") {
-    message = `🧠 Claude MCP Ready\n📁 Workspace: ${escapeText(workspacePath)}\n🔌 Services: ${servers.map(s => escapeText(s)).join(", ")}\n\n✨ Enhanced development capabilities now active`;
+    message = `🧠 Claude MCP Ready\n📁 Workspace: ${escapeText(workspacePath)}\n🔌 Services: ${servers.map((s) => escapeText(s)).join(", ")}\n\n✨ Enhanced development capabilities now active`;
     additionalProperties.developerFriendly = true;
     additionalProperties.style = "professional";
   } else if (type === "next_steps" && context) {
@@ -465,7 +493,7 @@ export function generateProfessionalUXMessaging(messageConfig) {
     additionalProperties.guidance = guidance;
     additionalProperties.specific = true;
   } else if (type === "error") {
-    message = `Error: ${escapeText(String(error || 'Unknown error'))}`;
+    message = `Error: ${escapeText(String(error || "Unknown error"))}`;
     additionalProperties.errorHandlingPreserved = true;
     additionalProperties.sanitizedInput = escapeText(userInput || "");
   } else if (type === "status_update") {

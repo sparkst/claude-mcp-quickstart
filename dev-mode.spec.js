@@ -22,12 +22,20 @@ const __filename = fileURLToPath(import.meta.url);
 describe("dev-mode", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.resetAllMocks();
+    // Explicitly mock fs functions to ensure they work
+    vi.mocked(fs.readFile).mockReset();
+    vi.mocked(fs.writeFile).mockReset();
+    vi.mocked(fs.readdir).mockReset();
+    vi.mocked(fs.access).mockReset();
     console.log = vi.fn();
     console.error = vi.fn();
     console.warn = vi.fn();
   });
 
   afterEach(() => {
+    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.restoreAllMocks();
   });
 

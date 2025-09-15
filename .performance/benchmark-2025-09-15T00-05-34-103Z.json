@@ -1,0 +1,36 @@
+{
+  "timestamp": "2025-09-15T00:05:34.103Z",
+  "results": {
+    "version": {
+      "min": 42.46,
+      "max": 43.98,
+      "median": 43.25,
+      "average": 43.21,
+      "target": 60,
+      "measurements": [
+        42.464625,
+        42.817917,
+        43.2465,
+        43.525584,
+        43.976208
+      ]
+    },
+    "help": {
+      "min": 42.79,
+      "max": 43.82,
+      "median": 42.97,
+      "average": 43.26,
+      "target": 80,
+      "measurements": [
+        42.78625,
+        42.964,
+        42.97175,
+        43.73975,
+        43.823709
+      ]
+    }
+  },
+  "nodeVersion": "v22.13.1",
+  "platform": "darwin",
+  "arch": "arm64"
+}

@@ -311,7 +311,7 @@ describe("REQ-305: Professional UX Messaging", () => {
     expect(secureMessage).toHaveProperty("errorHandlingPreserved", true);
     expect(secureMessage.message).not.toContain("<script>");
     expect(secureMessage.sanitizedInput).toBe(
-      "&lt;script&gt;alert('xss')&lt;/script&gt;"
+      "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;&#x2F;script&gt;"
     );
   });
 
@@ -606,15 +606,15 @@ describe("REQ-404: Complex Capability Logic Needs Refactoring", () => {
       builtInFeatures: {
         filesystem: { available: true },
         context7: { available: false },
-        github: { available: true }
-      }
+        github: { available: true },
+      },
     };
 
     const capabilities = generateMcpCapabilities(configAnalysis);
 
     // The current logic is hard to predict and maintain
     // This test demonstrates the complexity issue by showing unclear capability detection
-    const complexCapability = capabilities.find(cap =>
+    const complexCapability = capabilities.find((cap) =>
       cap.title.includes("Workflow Integration")
     );
 
@@ -636,9 +636,9 @@ describe("REQ-404: Complex Capability Logic Needs Refactoring", () => {
         name: "minimal setup",
         config: {
           mcpServers: ["memory"],
-          builtInFeatures: { filesystem: { available: true } }
+          builtInFeatures: { filesystem: { available: true } },
         },
-        expectedComplexCapabilityEnabled: true
+        expectedComplexCapabilityEnabled: true,
       },
       {
         name: "medium setup",
@@ -646,10 +646,10 @@ describe("REQ-404: Complex Capability Logic Needs Refactoring", () => {
           mcpServers: ["memory", "supabase"],
           builtInFeatures: {
             filesystem: { available: true },
-            github: { available: true }
-          }
+            github: { available: true },
+          },
         },
-        expectedComplexCapabilityEnabled: true
+        expectedComplexCapabilityEnabled: true,
       },
       {
         name: "comprehensive setup",
@@ -658,21 +658,23 @@ describe("REQ-404: Complex Capability Logic Needs Refactoring", () => {
           builtInFeatures: {
             filesystem: { available: true },
             context7: { available: true },
-            github: { available: true }
-          }
+            github: { available: true },
+          },
         },
-        expectedComplexCapabilityEnabled: true
-      }
+        expectedComplexCapabilityEnabled: true,
+      },
     ];
 
-    testCases.forEach(testCase => {
+    testCases.forEach((testCase) => {
       const capabilities = generateMcpCapabilities(testCase.config);
-      const workflowCapability = capabilities.find(cap =>
+      const workflowCapability = capabilities.find((cap) =>
         cap.title.includes("Workflow Integration")
       );
 
       // BUG: Complex logic makes these results unpredictable
-      expect(workflowCapability?.enabled).toBe(testCase.expectedComplexCapabilityEnabled);
+      expect(workflowCapability?.enabled).toBe(
+        testCase.expectedComplexCapabilityEnabled
+      );
     });
   });
 });
@@ -688,16 +690,16 @@ describe("REQ-405: Missing Defensive Checks for Configuration Access", () => {
       {
         name: "missing builtInFeatures",
         config: {
-          mcpServers: ["memory"]
+          mcpServers: ["memory"],
           // builtInFeatures missing entirely
-        }
+        },
       },
       {
         name: "null builtInFeatures",
         config: {
           mcpServers: ["memory"],
-          builtInFeatures: null
-        }
+          builtInFeatures: null,
+        },
       },
       {
         name: "builtInFeatures with missing properties",
@@ -706,9 +708,11 @@ describe("REQ-405: Missing Defensive Checks for Configuration Access", () => {
           builtInFeatures: {
             filesystem: null,
             context7: undefined,
-            github: { /* missing available property */ }
-          }
-        }
+            github: {
+              /* missing available property */
+            },
+          },
+        },
       },
       {
         name: "builtInFeatures with wrong data types",
@@ -717,10 +721,10 @@ describe("REQ-405: Missing Defensive Checks for Configuration Access", () => {
           builtInFeatures: {
             filesystem: "true", // string instead of object
             context7: 1, // number instead of object
-            github: [] // array instead of object
-          }
-        }
-      }
+            github: [], // array instead of object
+          },
+        },
+      },
     ];
 
     malformedConfigs.forEach(({ name, config }) => {
@@ -728,7 +732,9 @@ describe("REQ-405: Missing Defensive Checks for Configuration Access", () => {
       expect(() => {
         const capabilities = generateMcpCapabilities(config);
         // Access patterns like builtInFeatures?.filesystem?.available should be safe
-        const filesystemCap = capabilities.find(cap => cap.title.includes("File System"));
+        const filesystemCap = capabilities.find((cap) =>
+          cap.title.includes("File System")
+        );
         return filesystemCap?.enabled;
       }).not.toThrow(`Configuration access should not fail for ${name}`);
     });
@@ -746,28 +752,46 @@ describe("REQ-405: Missing Defensive Checks for Configuration Access", () => {
 
     // These should not crash but provide reasonable defaults
     expect(() => {
-      generateEnhancedPromptContent(projectPath, mcpServers, projectType, undefinedConfig);
+      generateEnhancedPromptContent(
+        projectPath,
+        mcpServers,
+        projectType,
+        undefinedConfig
+      );
     }).not.toThrow("Should handle undefined configAnalysis");
 
     expect(() => {
-      generateEnhancedPromptContent(projectPath, mcpServers, projectType, nullConfig);
+      generateEnhancedPromptContent(
+        projectPath,
+        mcpServers,
+        projectType,
+        nullConfig
+      );
     }).not.toThrow("Should handle null configAnalysis");
 
     expect(() => {
-      generateEnhancedPromptContent(projectPath, mcpServers, projectType, emptyConfig);
+      generateEnhancedPromptContent(
+        projectPath,
+        mcpServers,
+        projectType,
+        emptyConfig
+      );
     }).not.toThrow("Should handle empty configAnalysis");
   });
 
   test("REQ-405 — capability detection should provide fallback values for missing configuration", () => {
     // Test configurations with partially missing data
     const partialConfigs = [
-      { mcpServers: undefined, builtInFeatures: { filesystem: { available: true } } },
+      {
+        mcpServers: undefined,
+        builtInFeatures: { filesystem: { available: true } },
+      },
       { mcpServers: null, builtInFeatures: { context7: { available: true } } },
       { mcpServers: [], builtInFeatures: undefined },
-      { mcpServers: ["memory"], builtInFeatures: {} }
+      { mcpServers: ["memory"], builtInFeatures: {} },
     ];
 
-    partialConfigs.forEach(config => {
+    partialConfigs.forEach((config) => {
       const capabilities = generateMcpCapabilities(config);
 
       // BUG: Should provide reasonable defaults instead of failing
@@ -775,11 +799,11 @@ describe("REQ-405: Missing Defensive Checks for Configuration Access", () => {
       expect(capabilities.length).toBe(10); // Should always return 10 capabilities
 
       // Each capability should have required properties even with missing config
-      capabilities.forEach(cap => {
-        expect(cap).toHaveProperty('title');
-        expect(cap).toHaveProperty('description');
-        expect(cap).toHaveProperty('enabled');
-        expect(typeof cap.enabled).toBe('boolean');
+      capabilities.forEach((cap) => {
+        expect(cap).toHaveProperty("title");
+        expect(cap).toHaveProperty("description");
+        expect(cap).toHaveProperty("enabled");
+        expect(typeof cap.enabled).toBe("boolean");
       });
     });
   });

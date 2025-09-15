@@ -397,14 +397,4 @@ describe("REQ-206 - Backward Compatibility", () => {
   });
 });
 
-// Test helpers
-beforeEach(() => {
-  vi.clearAllMocks();
-  // Default mock - file exists and is readable
-  fs.access.mockResolvedValue();
-  fs.readFile.mockResolvedValue('{"mcpServers": {}}');
-});
-
-afterEach(() => {
-  vi.clearAllMocks();
-});
+// Test helpers - moved to individual describe blocks to avoid global interference

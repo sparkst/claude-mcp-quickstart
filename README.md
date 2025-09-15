@@ -399,12 +399,31 @@ GitHub Packages publishing uses the built-in `GITHUB_TOKEN`.
 - Verify your NPM token has publish permissions for your package
 - Ensure package.json `name` field matches your NPM package name
 
-For detailed implementation guidelines, see [CLAUDE.md](./CLAUDE.md).
+## 📚 Complete Documentation System
 
-For version history and changes, see [CHANGELOG.md](./CHANGELOG.md).
+This project implements a comprehensive development workflow system documented in the following guides:
 
-For migration from previous versions, see [MIGRATION.md](./MIGRATION.md).
+### Core Documentation
+- **[CLAUDE.md](./CLAUDE.md)** - Core principles, TDD enforcement, and QShortcuts workflow
+- **[docs/COMPLETE_SYSTEM_INTEGRATION.md](./docs/COMPLETE_SYSTEM_INTEGRATION.md)** - Master integration guide
 
-For Claude Desktop architecture reference, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+### Implementation Guides
+- **[docs/DEVELOPER_WORKFLOW_GUIDE.md](./docs/DEVELOPER_WORKFLOW_GUIDE.md)** - Step-by-step feature development tutorials
+- **[docs/TESTING_FRAMEWORK_GUIDE.md](./docs/TESTING_FRAMEWORK_GUIDE.md)** - 11-point testing checklist with property-based examples
+- **[docs/AGENT_SYSTEM_GUIDE.md](./docs/AGENT_SYSTEM_GUIDE.md)** - Complete agent coordination documentation
+- **[docs/TROUBLESHOOTING_GUIDE.md](./docs/TROUBLESHOOTING_GUIDE.md)** - Common issues and solutions
 
-For test suite architecture and REQ-402 refactoring details, see [TEST_ARCHITECTURE.md](./TEST_ARCHITECTURE.md).
+### Reference Documentation
+- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and changes
+- **[MIGRATION.md](./MIGRATION.md)** - Migration guide for existing users
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Claude Desktop architecture reference
+- **[TEST_ARCHITECTURE.md](./TEST_ARCHITECTURE.md)** - Test suite architecture and REQ-402 refactoring
+
+### Quick Start for Developers
+
+1. **New to the system?** Start with [docs/DEVELOPER_WORKFLOW_GUIDE.md](./docs/DEVELOPER_WORKFLOW_GUIDE.md)
+2. **Want to understand testing?** Read [docs/TESTING_FRAMEWORK_GUIDE.md](./docs/TESTING_FRAMEWORK_GUIDE.md)
+3. **Need agent coordination?** See [docs/AGENT_SYSTEM_GUIDE.md](./docs/AGENT_SYSTEM_GUIDE.md)
+4. **Having issues?** Check [docs/TROUBLESHOOTING_GUIDE.md](./docs/TROUBLESHOOTING_GUIDE.md)
+
+The complete documentation integrates TDD enforcement, requirements discipline, agent coordination, and quality gates into a cohesive development system.

@@ -68,10 +68,10 @@ function escapePathSmart(text) {
     /data:.*script/i,
     /on\w+=/i, // P0-008: Event handler attributes
     /<iframe/i, // P0-008: Iframe injection
-    /style\s*=/i // P0-008: Style attribute injection
+    /style\s*=/i, // P0-008: Style attribute injection
   ];
 
-  const isMalicious = dangerousPatterns.some(pattern => pattern.test(text));
+  const isMalicious = dangerousPatterns.some((pattern) => pattern.test(text));
 
   // If potentially malicious, use full escaping
   if (isMalicious) {
@@ -85,7 +85,7 @@ function escapePathSmart(text) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-    // Note: Forward slashes (/) are NOT escaped to maintain path readability
+  // Note: Forward slashes (/) are NOT escaped to maintain path readability
 }
 
 /**
@@ -107,21 +107,29 @@ function formatServerList(mcpServers) {
  */
 function formatServerListForJSON(mcpServers) {
   if (!Array.isArray(mcpServers)) return '"memory", "supabase"';
-  return mcpServers
-    .filter((s) => typeof s === "string" && s.trim())
-    .map((s) => {
-      // P0-007: Escape all potentially dangerous characters for JSON context
-      const escaped = escapeMarkdown(s);
-      return `"${escaped}"`;
-    })
-    .join(", ") || '"memory", "supabase"'; // P0-007: Fallback if no valid servers
+  return (
+    mcpServers
+      .filter((s) => typeof s === "string" && s.trim())
+      .map((s) => {
+        // P0-007: Escape all potentially dangerous characters for JSON context
+        const escaped = escapeMarkdown(s);
+        return `"${escaped}"`;
+      })
+      .join(", ") || '"memory", "supabase"'
+  ); // P0-007: Fallback if no valid servers
 }
 
 /**
  * REQ-403: Use user's improved template with dynamic content insertion
  * P0-001: Apply comprehensive template injection protection
  */
-function generateFromUserTemplate(projectPath, mcpServers, projectType, setupVerification, enhancedContent) {
+function generateFromUserTemplate(
+  projectPath,
+  mcpServers,
+  projectType,
+  setupVerification,
+  enhancedContent
+) {
   const timestamp = new Date().toISOString();
   const configPath = getClaudeConfigPath();
 
@@ -167,22 +175,30 @@ Last verified: ${timestamp}
 
 ## 🚀 10 Things You Can Do Right Now
 
-${enhancedContent.practicalExamples.map((example, index) => `
+${enhancedContent.practicalExamples
+  .map(
+    (example, index) => `
 ### ${index + 1}. ${example.title}
 \`\`\`
 ${example.prompt}
 \`\`\`
-`).join('')}
+`
+  )
+  .join("")}
 
 ## ⚡ 10 New Capabilities Unlocked by MCP
 
-${enhancedContent.mcpCapabilities.map((cap, index) => `
+${enhancedContent.mcpCapabilities
+  .map(
+    (cap, index) => `
 ### ${index + 1}. ${cap.title} ${cap.enabled ? "✅" : "❌"}
 ${cap.description}
 
 **Before MCP:** ${cap.beforeMcp}
 **With MCP:** ${cap.withMcp}
-`).join('')}
+`
+  )
+  .join("")}
 
 **Capabilities Active: ${parseInt(enhancedContent.enabledCapabilities) || 0}/${parseInt(enhancedContent.totalCapabilities) || 0}**
 
@@ -252,8 +268,13 @@ export async function createBrainConnectionFile(
   // Legacy code commented out since switching to template-based approach
 
   // REQ-403: Use user's improved template with dynamic content insertion
-  const prompt = generateFromUserTemplate(projectPath, mcpServers, projectType, setupVerification, enhancedContent);
-
+  const prompt = generateFromUserTemplate(
+    projectPath,
+    mcpServers,
+    projectType,
+    setupVerification,
+    enhancedContent
+  );
 
   await fs.writeFile(filePath, prompt, "utf8");
   return filePath;

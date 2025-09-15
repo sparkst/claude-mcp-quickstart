@@ -1,6 +1,6 @@
 {
   "name": "claude-mcp-quickstart",
-  "version": "2.4.0",
+  "version": "2.4.2",
   "description": "MCP Quickstart with expert multi-disciplinary AI assistance",
   "main": "index.js",
   "type": "module",
@@ -15,6 +15,8 @@
     "config-analyzer.js",
     "setup-diagnostics.js",
     "brain-connection-ux.js",
+    "performance-monitor.js",
+    "lib/",
     "templates/",
     "bootstrap-lovable-v2/",
     "test-utils.js",
@@ -28,9 +30,13 @@
     "quick-start": "node index.js quick-start",
     "test": "vitest --run",
     "test:run": "vitest run --reporter=basic --no-watch",
+    "benchmark": "node performance-monitor.js",
+    "benchmark:ci": "node performance-monitor.js",
     "lint": "eslint *.js",
     "format": "prettier --write *.js",
-    "format:check": "prettier --check *.js"
+    "format:check": "prettier --check *.js",
+    "test:ux": "node run-ux-tests.js",
+    "test:ux-full": "echo 'Run complete UX testing checklist:' && echo 'See: ux-testing-checklist.md'"
   },
   "dependencies": {
     "@brave/brave-search-mcp-server": "latest",

@@ -432,7 +432,7 @@ async function setupQuickstart() {
     console.error(chalk.red(error.message));
 
     // P0-010: Only exit if not in test environment, otherwise re-throw for testability
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === "test") {
       throw error;
     } else {
       process.exit(1);

@@ -6,7 +6,7 @@ vi.mock("./setup-diagnostics.js", () => ({
     success: true,
     analysis: { mcpServers: {}, builtInFeatures: {} },
     summary: { filesystemEnabled: true, totalServers: 0 },
-    troubleshooting: {}
+    troubleshooting: {},
   }),
 }));
 
@@ -15,11 +15,15 @@ vi.mock("./brain-connection-ux.js", () => ({
     practicalExamples: [],
     mcpCapabilities: [
       { title: "Test Capability 1", description: "Test desc 1", enabled: true },
-      { title: "Test Capability 2", description: "Test desc 2", enabled: false },
-      { title: "Test Capability 3", description: "Test desc 3", enabled: true }
+      {
+        title: "Test Capability 2",
+        description: "Test desc 2",
+        enabled: false,
+      },
+      { title: "Test Capability 3", description: "Test desc 3", enabled: true },
     ],
     enabledCapabilities: 2,
-    totalCapabilities: 10
+    totalCapabilities: 10,
   }),
   generateSetupVerificationContent: vi.fn().mockReturnValue({
     status: "success",
@@ -29,15 +33,15 @@ vi.mock("./brain-connection-ux.js", () => ({
       workspaceConfigured: true,
       projectIncluded: true,
       totalServers: 0,
-      recommendedExtensions: { context7: false, github: false }
-    }
+      recommendedExtensions: { context7: false, github: false },
+    },
   }),
   formatTroubleshootingGuidance: vi.fn().mockReturnValue(""),
   generateMcpCapabilities: vi.fn().mockReturnValue([
     { title: "Mock Capability 1", description: "Mock desc 1", enabled: true },
     { title: "Mock Capability 2", description: "Mock desc 2", enabled: false },
-    { title: "Mock Capability 3", description: "Mock desc 3", enabled: true }
-  ])
+    { title: "Mock Capability 3", description: "Mock desc 3", enabled: true },
+  ]),
 }));
 
 // Now import after mocks are defined
@@ -81,8 +85,8 @@ describe("createBrainConnectionFile", () => {
     ];
 
     // Critical: No XSS vectors should remain in output
-    xssVectors.forEach(vector => {
-      expect(capturedContent).not.toMatch(new RegExp(vector, 'i'));
+    xssVectors.forEach((vector) => {
+      expect(capturedContent).not.toMatch(new RegExp(vector, "i"));
     });
 
     // Validate path content is properly escaped for security
@@ -117,17 +121,19 @@ describe("createBrainConnectionFile", () => {
       "<script>",
       "</h1>",
       "javascript:",
-      "on\\w+="
+      "on\\w+=",
     ];
 
     // Critical: No raw HTML injection vectors should remain in output (escaped versions are safe)
-    htmlInjectionVectors.forEach(vector => {
-      expect(capturedContent).not.toMatch(new RegExp(vector, 'i'));
+    htmlInjectionVectors.forEach((vector) => {
+      expect(capturedContent).not.toMatch(new RegExp(vector, "i"));
     });
 
     // Validate project type content is properly escaped for security
     expect(capturedContent).toContain("Node.js"); // Safe portion should remain
-    expect(capturedContent).toContain("&lt;&#x2F;h1&gt;&lt;script&gt;malicious()&lt;&#x2F;script&gt;"); // Should be properly escaped
+    expect(capturedContent).toContain(
+      "&lt;&#x2F;h1&gt;&lt;script&gt;malicious()&lt;&#x2F;script&gt;"
+    ); // Should be properly escaped
   });
 
   test("REQ-202 — prevents template injection in MCP servers array", async () => {
@@ -474,7 +480,8 @@ describe("REQ-401: Human-Readable Directory Paths", () => {
   });
 
   test("REQ-401 — escapeMarkdown function preserves forward slashes for human readability", async () => {
-    const testPath = "/Users/travis/Library/CloudStorage/Dropbox/dev/claude-mcp-quickstart";
+    const testPath =
+      "/Users/travis/Library/CloudStorage/Dropbox/dev/claude-mcp-quickstart";
     const mcpServers = ["memory", "supabase"];
 
     let capturedContent = "";
@@ -487,8 +494,12 @@ describe("REQ-401: Human-Readable Directory Paths", () => {
 
     // Directory paths should be human-readable, not HTML-encoded
     expect(capturedContent).toContain(`\`${testPath}\``);
-    expect(capturedContent).not.toContain("&#x2F;Users&#x2F;travis&#x2F;Library");
-    expect(capturedContent).not.toContain("&#x2F;dev&#x2F;claude-mcp-quickstart");
+    expect(capturedContent).not.toContain(
+      "&#x2F;Users&#x2F;travis&#x2F;Library"
+    );
+    expect(capturedContent).not.toContain(
+      "&#x2F;dev&#x2F;claude-mcp-quickstart"
+    );
   });
 
   test("REQ-401 — config path maintains readable format in workspace context", async () => {
@@ -504,13 +515,15 @@ describe("REQ-401: Human-Readable Directory Paths", () => {
     await createBrainConnectionFile(projectPath, mcpServers, "React");
 
     // Config path should be readable
-    const expectedConfigPath = "/Users/*/Library/Application Support/Claude/claude_desktop_config.json";
+    const expectedConfigPath =
+      "/Users/*/Library/Application Support/Claude/claude_desktop_config.json";
     expect(capturedContent).toMatch(/claude_desktop_config\.json/);
     expect(capturedContent).not.toContain("&#x2F;Library&#x2F;Application");
   });
 
   test("REQ-401 — memory save context uses readable paths", async () => {
-    const longPath = "/Users/developer/Projects/company/client-work/web-applications/react-dashboard";
+    const longPath =
+      "/Users/developer/Projects/company/client-work/web-applications/react-dashboard";
     const mcpServers = ["memory", "supabase"];
 
     let capturedContent = "";
@@ -522,11 +535,14 @@ describe("REQ-401: Human-Readable Directory Paths", () => {
     await createBrainConnectionFile(longPath, mcpServers, "React");
 
     // Memory context should contain readable path
-    expect(capturedContent).toMatch(/Primary workspace: [^&]+web-applications\/react-dashboard/);
-    expect(capturedContent).not.toContain("&#x2F;web-applications&#x2F;react-dashboard");
+    expect(capturedContent).toMatch(
+      /Primary workspace: [^&]+web-applications\/react-dashboard/
+    );
+    expect(capturedContent).not.toContain(
+      "&#x2F;web-applications&#x2F;react-dashboard"
+    );
   });
 });
-
 
 describe("REQ-403: Use User's Updated Template Content", () => {
   beforeEach(() => {
@@ -642,7 +658,8 @@ describe("REQ-401: Critical HTML Escaping Bug - Over-Aggressive Path Escaping", 
   });
 
   test("REQ-401 — escapeMarkdown function over-escapes forward slashes making paths unreadable", async () => {
-    const humanReadablePath = "/Users/travis/Library/CloudStorage/Dropbox/dev/claude-mcp-quickstart";
+    const humanReadablePath =
+      "/Users/travis/Library/CloudStorage/Dropbox/dev/claude-mcp-quickstart";
     const mcpServers = ["memory", "supabase"];
 
     let capturedContent = "";
@@ -659,9 +676,13 @@ describe("REQ-401: Critical HTML Escaping Bug - Over-Aggressive Path Escaping", 
 
     // This should PASS (paths should be human-readable) but will FAIL due to over-escaping
     expect(capturedContent).toContain(`\`${humanReadablePath}\``);
-    expect(capturedContent).not.toContain("&#x2F;Users&#x2F;travis&#x2F;Library");
+    expect(capturedContent).not.toContain(
+      "&#x2F;Users&#x2F;travis&#x2F;Library"
+    );
     expect(capturedContent).not.toContain("&#x2F;CloudStorage&#x2F;Dropbox");
-    expect(capturedContent).not.toContain("&#x2F;dev&#x2F;claude-mcp-quickstart");
+    expect(capturedContent).not.toContain(
+      "&#x2F;dev&#x2F;claude-mcp-quickstart"
+    );
   });
 
   test("REQ-401 — config path becomes unreadable due to forward slash escaping", async () => {
@@ -677,16 +698,20 @@ describe("REQ-401: Critical HTML Escaping Bug - Over-Aggressive Path Escaping", 
     await createBrainConnectionFile(projectPath, mcpServers, "React");
 
     // BUG: Claude Desktop config path should be human-readable
-    const expectedConfigPattern = /Library\/Application Support\/Claude\/claude_desktop_config\.json/;
+    const expectedConfigPattern =
+      /Library\/Application Support\/Claude\/claude_desktop_config\.json/;
     expect(capturedContent).toMatch(expectedConfigPattern);
 
     // Should NOT contain HTML-escaped forward slashes
     expect(capturedContent).not.toContain("&#x2F;Library&#x2F;Application");
-    expect(capturedContent).not.toContain("&#x2F;Claude&#x2F;claude_desktop_config");
+    expect(capturedContent).not.toContain(
+      "&#x2F;Claude&#x2F;claude_desktop_config"
+    );
   });
 
   test("REQ-401 — workspace context paths are rendered unreadable in memory save instructions", async () => {
-    const deepWorkspacePath = "/Users/developer/Projects/company/client-work/web-applications/react-dashboard";
+    const deepWorkspacePath =
+      "/Users/developer/Projects/company/client-work/web-applications/react-dashboard";
     const mcpServers = ["memory", "supabase"];
 
     let capturedContent = "";
@@ -702,12 +727,15 @@ describe("REQ-401: Critical HTML Escaping Bug - Over-Aggressive Path Escaping", 
     // But will show escaped version with &#x2F; making it unusable
 
     expect(capturedContent).toMatch(/Primary workspace: [^&]+react-dashboard/);
-    expect(capturedContent).not.toContain("&#x2F;client-work&#x2F;web-applications");
+    expect(capturedContent).not.toContain(
+      "&#x2F;client-work&#x2F;web-applications"
+    );
     expect(capturedContent).not.toContain("&#x2F;Projects&#x2F;company");
   });
 
   test("REQ-401 — file paths in connection prompts should be copy-pasteable", async () => {
-    const macOsPath = "/Users/travis/Library/CloudStorage/Dropbox/dev/claude-mcp-quickstart";
+    const macOsPath =
+      "/Users/travis/Library/CloudStorage/Dropbox/dev/claude-mcp-quickstart";
     const linuxPath = "/home/user/projects/my-awesome-app";
     const windowsStylePath = "C:/Users/developer/Documents/projects/webapp";
 
@@ -754,8 +782,12 @@ describe("REQ-401: Critical HTML Escaping Bug - Over-Aggressive Path Escaping", 
     expect(capturedContent).toContain(expectedStatusFile);
 
     // Should NOT contain HTML-escaped paths that users can't read
-    expect(capturedContent).not.toContain("&#x2F;complex&#x2F;path&#x2F;with&#x2F;many");
-    expect(capturedContent).not.toContain("&#x2F;nested&#x2F;directories&#x2F;my-project");
+    expect(capturedContent).not.toContain(
+      "&#x2F;complex&#x2F;path&#x2F;with&#x2F;many"
+    );
+    expect(capturedContent).not.toContain(
+      "&#x2F;nested&#x2F;directories&#x2F;my-project"
+    );
   });
 
   test("REQ-401 — escapeMarkdown vs escapeMarkdownPath function usage demonstrates the fix needed", async () => {
@@ -776,7 +808,9 @@ describe("REQ-401: Critical HTML Escaping Bug - Over-Aggressive Path Escaping", 
 
     // Paths should remain readable (escapeMarkdownPath should be used)
     expect(capturedContent).toContain("/Users/travis/Documents/my-project");
-    expect(capturedContent).not.toContain("&#x2F;Users&#x2F;travis&#x2F;Documents");
+    expect(capturedContent).not.toContain(
+      "&#x2F;Users&#x2F;travis&#x2F;Documents"
+    );
 
     // User input should be properly escaped (escapeMarkdown should be used)
     expect(capturedContent).not.toContain("<script>alert('xss')</script>");
@@ -789,9 +823,9 @@ describe("REQ-901: Analyze and Remove Obsolete REQ-402 setupCompleteness Tests",
   test("REQ-901 — all setupCompleteness related tests have been identified and removed", () => {
     // This test should pass once all obsolete setupCompleteness tests are cleaned up
     const testFiles = [
-      'brain-connection.spec.js',
-      'brain-connection-ux.spec.js',
-      'setup.spec.js'
+      "brain-connection.spec.js",
+      "brain-connection-ux.spec.js",
+      "setup.spec.js",
     ];
 
     // REQ-901: setupCompleteness was intentionally removed from the architecture
@@ -814,26 +848,27 @@ describe("REQ-902: Refactor REQ-402 Tests to Use New Capability Counting Archite
       practicalExamples: [],
       mcpCapabilities: [],
       enabledCapabilities: 5,
-      totalCapabilities: 10
+      totalCapabilities: 10,
     };
 
     // REQ-902: Verify new architecture format is being used correctly
-    const usesNewArchitecture = typeof mockResult.enabledCapabilities === 'number' &&
-                                typeof mockResult.totalCapabilities === 'number' &&
-                                mockResult.setupCompleteness === undefined;
+    const usesNewArchitecture =
+      typeof mockResult.enabledCapabilities === "number" &&
+      typeof mockResult.totalCapabilities === "number" &&
+      mockResult.setupCompleteness === undefined;
     expect(usesNewArchitecture).toBe(true);
   });
 
   test("REQ-902 — capability counting tests match generateMcpCapabilities logic", () => {
     // This test should validate that capability counting works correctly
     const mockCapabilities = [
-      { title: 'Filesystem', enabled: true },
-      { title: 'Memory', enabled: false },
-      { title: 'Context7', enabled: true }
+      { title: "Filesystem", enabled: true },
+      { title: "Memory", enabled: false },
+      { title: "Context7", enabled: true },
     ];
 
     // REQ-902: Test that capability counting logic matches expectations
-    const enabledCount = mockCapabilities.filter(cap => cap.enabled).length;
+    const enabledCount = mockCapabilities.filter((cap) => cap.enabled).length;
     const totalCount = mockCapabilities.length;
     const logicMatches = enabledCount === 2 && totalCount === 3;
     expect(logicMatches).toBe(true);
@@ -849,18 +884,34 @@ describe("REQ-903: Create New Tests for Current Capability Counting System", () 
       enabledCapabilities: 3,
       totalCapabilities: 10,
       mcpCapabilities: [
-        { title: "File Management", description: "Read/write files", enabled: true },
-        { title: "Memory Storage", description: "Store context", enabled: true },
-        { title: "Web Search", description: "Search web content", enabled: false }
-      ]
+        {
+          title: "File Management",
+          description: "Read/write files",
+          enabled: true,
+        },
+        {
+          title: "Memory Storage",
+          description: "Store context",
+          enabled: true,
+        },
+        {
+          title: "Web Search",
+          description: "Search web content",
+          enabled: false,
+        },
+      ],
     };
 
     // Validate new architecture properties
-    expect(typeof newArchitectureStructure.enabledCapabilities).toBe('number');
-    expect(typeof newArchitectureStructure.totalCapabilities).toBe('number');
+    expect(typeof newArchitectureStructure.enabledCapabilities).toBe("number");
+    expect(typeof newArchitectureStructure.totalCapabilities).toBe("number");
     expect(newArchitectureStructure.setupCompleteness).toBeUndefined(); // Old architecture removed
-    expect(newArchitectureStructure.enabledCapabilities).toBeGreaterThanOrEqual(0);
-    expect(newArchitectureStructure.enabledCapabilities).toBeLessThanOrEqual(newArchitectureStructure.totalCapabilities);
+    expect(newArchitectureStructure.enabledCapabilities).toBeGreaterThanOrEqual(
+      0
+    );
+    expect(newArchitectureStructure.enabledCapabilities).toBeLessThanOrEqual(
+      newArchitectureStructure.totalCapabilities
+    );
     expect(Array.isArray(newArchitectureStructure.mcpCapabilities)).toBe(true);
   });
 
@@ -871,41 +922,46 @@ describe("REQ-903: Create New Tests for Current Capability Counting System", () 
       title: "Example Capability",
       description: "Example description",
       enabled: true,
-      category: "integration"
+      category: "integration",
     };
 
-    const requiredProperties = ['title', 'description', 'enabled'];
+    const requiredProperties = ["title", "description", "enabled"];
 
     // Validate all required properties exist and have correct types
-    const hasAllRequiredProps = requiredProperties.every(prop =>
+    const hasAllRequiredProps = requiredProperties.every((prop) =>
       Object.prototype.hasOwnProperty.call(capabilityExample, prop)
     );
 
     expect(hasAllRequiredProps).toBe(true);
-    expect(typeof capabilityExample.title).toBe('string');
-    expect(typeof capabilityExample.description).toBe('string');
-    expect(typeof capabilityExample.enabled).toBe('boolean');
+    expect(typeof capabilityExample.title).toBe("string");
+    expect(typeof capabilityExample.description).toBe("string");
+    expect(typeof capabilityExample.enabled).toBe("boolean");
   });
 
   test("REQ-903 — capability objects have required properties", () => {
     // REQ-903: Test that capability objects have all required properties for the new architecture
-    const requiredProperties = ['title', 'description', 'enabled'];
+    const requiredProperties = ["title", "description", "enabled"];
 
     // Expected capability structure from the new architecture
     const testCapabilities = [
       { title: "Mock Capability 1", description: "Mock desc 1", enabled: true },
-      { title: "Mock Capability 2", description: "Mock desc 2", enabled: false },
-      { title: "Mock Capability 3", description: "Mock desc 3", enabled: true }
+      {
+        title: "Mock Capability 2",
+        description: "Mock desc 2",
+        enabled: false,
+      },
+      { title: "Mock Capability 3", description: "Mock desc 3", enabled: true },
     ];
 
     expect(Array.isArray(testCapabilities)).toBe(true);
     expect(testCapabilities.length).toBe(3);
 
     // Test that all capabilities have required properties
-    const hasRequiredProps = testCapabilities.every(cap =>
-      typeof cap.title === 'string' &&
-      typeof cap.description === 'string' &&
-      typeof cap.enabled === 'boolean'
+    const hasRequiredProps = testCapabilities.every(
+      (cap) =>
+        typeof cap.title === "string" &&
+        typeof cap.description === "string" &&
+        typeof cap.enabled === "boolean"
     );
     expect(hasRequiredProps).toBe(true);
   });
@@ -918,13 +974,14 @@ describe("REQ-904: Fix Mock Infrastructure Issues in REQ-402 Related Tests", () 
       practicalExamples: [],
       mcpCapabilities: [],
       enabledCapabilities: 3,
-      totalCapabilities: 10
+      totalCapabilities: 10,
     };
 
     // REQ-904: Verify mock structure matches new architecture requirements
-    const mockStructureCorrect = typeof mockResult.enabledCapabilities === 'number' &&
-                                 typeof mockResult.totalCapabilities === 'number' &&
-                                 mockResult.setupCompleteness === undefined;
+    const mockStructureCorrect =
+      typeof mockResult.enabledCapabilities === "number" &&
+      typeof mockResult.totalCapabilities === "number" &&
+      mockResult.setupCompleteness === undefined;
     expect(mockStructureCorrect).toBe(true);
   });
 
@@ -934,15 +991,19 @@ describe("REQ-904: Fix Mock Infrastructure Issues in REQ-402 Related Tests", () 
     // REQ-904: Test defensive programming prevents undefined access errors
     const capabilities = [
       { title: "Mock Capability 1", description: "Mock desc 1", enabled: true },
-      { title: "Mock Capability 2", description: "Mock desc 2", enabled: false },
-      { title: "Mock Capability 3", description: "Mock desc 3", enabled: true }
+      {
+        title: "Mock Capability 2",
+        description: "Mock desc 2",
+        enabled: false,
+      },
+      { title: "Mock Capability 3", description: "Mock desc 3", enabled: true },
     ];
 
     // Should not throw undefined errors and should return valid array
     expect(Array.isArray(capabilities)).toBe(true);
 
     // Test filtering works without errors (this was the original failing case)
-    const enabledCaps = capabilities.filter(cap => cap.enabled);
+    const enabledCaps = capabilities.filter((cap) => cap.enabled);
     expect(Array.isArray(enabledCaps)).toBe(true);
     expect(enabledCaps.length).toBe(2); // 2 enabled capabilities
   });
@@ -955,12 +1016,24 @@ describe("REQ-904: Fix Mock Infrastructure Issues in REQ-402 Related Tests", () 
     const result = {
       practicalExamples: [],
       mcpCapabilities: [
-        { title: "Test Capability 1", description: "Test desc 1", enabled: true },
-        { title: "Test Capability 2", description: "Test desc 2", enabled: false },
-        { title: "Test Capability 3", description: "Test desc 3", enabled: true }
+        {
+          title: "Test Capability 1",
+          description: "Test desc 1",
+          enabled: true,
+        },
+        {
+          title: "Test Capability 2",
+          description: "Test desc 2",
+          enabled: false,
+        },
+        {
+          title: "Test Capability 3",
+          description: "Test desc 3",
+          enabled: true,
+        },
       ],
       enabledCapabilities: 2,
-      totalCapabilities: 10
+      totalCapabilities: 10,
     };
 
     expect(result).toBeTruthy();
@@ -976,8 +1049,12 @@ describe("REQ-905: Implement Defensive Validation Tests for New Architecture", (
     // Expected valid result structure for graceful handling
     const expectedCapabilities = [
       { title: "Mock Capability 1", description: "Mock desc 1", enabled: true },
-      { title: "Mock Capability 2", description: "Mock desc 2", enabled: false },
-      { title: "Mock Capability 3", description: "Mock desc 3", enabled: true }
+      {
+        title: "Mock Capability 2",
+        description: "Mock desc 2",
+        enabled: false,
+      },
+      { title: "Mock Capability 3", description: "Mock desc 3", enabled: true },
     ];
 
     // Test that the expected structure is valid
@@ -991,13 +1068,15 @@ describe("REQ-905: Implement Defensive Validation Tests for New Architecture", (
       { servers: null },
       { servers: undefined },
       { servers: "not-an-array" },
-      { servers: [null, undefined, ""] }
+      { servers: [null, undefined, ""] },
     ];
 
     // The system should handle all these gracefully (architectural requirement)
-    const handlesGracefully = malformedConfigs.every(config => {
+    const handlesGracefully = malformedConfigs.every((config) => {
       // System should provide consistent behavior for malformed input
-      return config === null || config === undefined || typeof config === 'object';
+      return (
+        config === null || config === undefined || typeof config === "object"
+      );
     });
     expect(handlesGracefully).toBe(true);
   });
@@ -1009,8 +1088,12 @@ describe("REQ-905: Implement Defensive Validation Tests for New Architecture", (
     const emptyConfig = { servers: [] };
     const expectedCapabilities = [
       { title: "Mock Capability 1", description: "Mock desc 1", enabled: true },
-      { title: "Mock Capability 2", description: "Mock desc 2", enabled: false },
-      { title: "Mock Capability 3", description: "Mock desc 3", enabled: true }
+      {
+        title: "Mock Capability 2",
+        description: "Mock desc 2",
+        enabled: false,
+      },
+      { title: "Mock Capability 3", description: "Mock desc 3", enabled: true },
     ];
 
     // Test that empty configuration results in valid capability structure
@@ -1018,7 +1101,8 @@ describe("REQ-905: Implement Defensive Validation Tests for New Architecture", (
     expect(emptyConfig.servers.length).toBe(0);
 
     // System should provide default capabilities for empty configurations
-    const correctHandling = Array.isArray(expectedCapabilities) && expectedCapabilities.length === 3;
+    const correctHandling =
+      Array.isArray(expectedCapabilities) && expectedCapabilities.length === 3;
     expect(correctHandling).toBe(true);
   });
 
@@ -1028,8 +1112,12 @@ describe("REQ-905: Implement Defensive Validation Tests for New Architecture", (
     // Expected stable behavior structure
     const stableResult = [
       { title: "Mock Capability 1", description: "Mock desc 1", enabled: true },
-      { title: "Mock Capability 2", description: "Mock desc 2", enabled: false },
-      { title: "Mock Capability 3", description: "Mock desc 3", enabled: true }
+      {
+        title: "Mock Capability 2",
+        description: "Mock desc 2",
+        enabled: false,
+      },
+      { title: "Mock Capability 3", description: "Mock desc 3", enabled: true },
     ];
 
     // Test that the expected result has stable structure
@@ -1040,13 +1128,13 @@ describe("REQ-905: Implement Defensive Validation Tests for New Architecture", (
     const unexpectedInputs = [
       { servers: [{ malformed: true }] },
       { servers: [123, true, {}] },
-      { totally: "wrong", structure: true }
+      { totally: "wrong", structure: true },
     ];
 
     // System should handle these gracefully (architectural requirement)
-    const crashPrevented = unexpectedInputs.every(input => {
+    const crashPrevented = unexpectedInputs.every((input) => {
       // System validates and handles unexpected input gracefully
-      return typeof input === 'object' && input !== null;
+      return typeof input === "object" && input !== null;
     });
     expect(crashPrevented).toBe(true);
   });
